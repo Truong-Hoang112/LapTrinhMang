@@ -62,11 +62,48 @@
              checkDirection(row, col, 1, -1);
     }
 
+    // function checkDirection removed to avoid duplicate definition
+    
+    function getWinCondition(row, col, dx, dy) {
+        // Đếm số quân liên tiếp theo cả 2 hướng
+        let count = 1;
+        let block = 0;
+
+        // Đếm về phía dx, dy
+        let r = row + dx, c = col + dy;
+        while (r >= 0 && r < size && c >= 0 && c < size && board[r][c] === currentPlayer) {
+            count++;
+            r += dx;
+            c += dy;
+        }
+        // Kiểm tra chặn đầu này
+        if (r < 0 || r >= size || c < 0 || c >= size || (board[r][c] !== '' && board[r][c] !== currentPlayer)) {
+            block++;
+        }
+
+        // Đếm về phía -dx, -dy
+        r = row - dx; c = col - dy;
+        while (r >= 0 && r < size && c >= 0 && c < size && board[r][c] === currentPlayer) {
+            count++;
+            r -= dx;
+            c -= dy;
+        }
+        // Kiểm tra chặn đầu kia
+        if (r < 0 || r >= size || c < 0 || c >= size || (board[r][c] !== '' && board[r][c] !== currentPlayer)) {
+            block++;
+        }
+
+        // Nếu bị chặn 1 đầu thì cần 5, không bị chặn thì cần 4
+        return block === 1 ? 5 : 4;
+    }
+
+    // Sửa lại checkDirection để dùng điều kiện thắng động
     function checkDirection(row, col, dx, dy) {
-      let count = 1;
-      count += countCells(row, col, dx, dy);
-      count += countCells(row, col, -dx, -dy);
-      return count >= 5;
+        let count = 1;
+        count += countCells(row, col, dx, dy);
+        count += countCells(row, col, -dx, -dy);
+        const winCondition = getWinCondition(row, col, dx, dy);
+        return count >= winCondition;
     }
 
     function countCells(row, col, dx, dy) {
