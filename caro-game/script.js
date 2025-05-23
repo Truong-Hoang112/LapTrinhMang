@@ -38,7 +38,7 @@ function initializeBoard() {
     }
 
     // Nếu ở chế độ vs-ai và máy đi trước (ví dụ O), kích hoạt nước đi của máy
-    // Hiện tại, X luôn đi trước, nên máy (O) sẽ đi sau người (X).
+    // X luôn đi trước, nên máy (O) sẽ đi sau người (X).
 }
 
 // Hàm kiểm tra thắng thua
@@ -75,7 +75,7 @@ function checkWin(row, col, player) {
 
         if (count >= 5) {
              // TODO: Có thể thêm luật chặn 2 đầu nếu cần (5 quân liên tiếp không bị chặn cả 2 đầu)
-             // Với kiểm tra cơ bản này, 5 quân liên tiếp là thắng.
+             // 5 quân liên tiếp là thắng.
             return true;
         }
     }
