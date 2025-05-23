@@ -1,131 +1,22 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Game Caro</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Cờ Caro 16x16</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Game Caro</h1>
-  <div id="gameBoard"></div>
-  <div id="status">Lượt: X</div>
-  <button onclick="resetGame()">Chơi lại</button>
+    <div class="container">
+        <h1>Game Cờ Caro</h1>
+        <div id="game-board" class="caro-board-16">
+            <!-- Các ô cờ sẽ được tạo bởi JavaScript -->
+        </div>
+        <div id="status" class="status">Lượt của người chơi X</div>
+        <button id="restart-button" class="button">Chơi lại</button>
+        <button id="mode-switch-button" class="button">Chơi với Máy</button> <!-- Nút chuyển chế độ -->
+    </div>
 
-  <script>
-    const size = 15;
-    let board = [];
-    let currentPlayer = 'X';
-    let gameOver = false;
-
-    function createBoard() {
-      const gameBoard = document.getElementById('gameBoard');
-      gameBoard.innerHTML = '';
-      board = [];
-      for (let i = 0; i < size; i++) {
-        const row = [];
-        for (let j = 0; j < size; j++) {
-          const cell = document.createElement('div');
-          cell.className = 'cell';
-          cell.dataset.row = i;
-          cell.dataset.col = j;
-          cell.addEventListener('click', handleCellClick);
-          gameBoard.appendChild(cell);
-          row.push('');
-        }
-        board.push(row);
-      }
-    }
-
-    function handleCellClick(e) {
-      if (gameOver) return;
-      const row = parseInt(e.target.dataset.row);
-      const col = parseInt(e.target.dataset.col);
-      if (board[row][col] !== '') return;
-
-      board[row][col] = currentPlayer;
-      e.target.textContent = currentPlayer;
-
-      if (checkWin(row, col)) {
-        document.getElementById('status').textContent = `Người chơi ${currentPlayer} thắng!`;
-        gameOver = true;
-      } else {
-        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-        document.getElementById('status').textContent = `Lượt: ${currentPlayer}`;
-      }
-    }
-
-    function checkWin(row, col) {
-      return checkDirection(row, col, 1, 0) ||
-             checkDirection(row, col, 0, 1) ||
-             checkDirection(row, col, 1, 1) ||
-             checkDirection(row, col, 1, -1);
-    }
-
-    // function checkDirection removed to avoid duplicate definition
-    
-    function getWinCondition(row, col, dx, dy) {
-        // Đếm số quân liên tiếp theo cả 2 hướng
-        let count = 1;
-        let block = 0;
-
-        // Đếm về phía dx, dy
-        let r = row + dx, c = col + dy;
-        while (r >= 0 && r < size && c >= 0 && c < size && board[r][c] === currentPlayer) {
-            count++;
-            r += dx;
-            c += dy;
-        }
-        // Kiểm tra chặn đầu này
-        if (r < 0 || r >= size || c < 0 || c >= size || (board[r][c] !== '' && board[r][c] !== currentPlayer)) {
-            block++;
-        }
-
-        // Đếm về phía -dx, -dy
-        r = row - dx; c = col - dy;
-        while (r >= 0 && r < size && c >= 0 && c < size && board[r][c] === currentPlayer) {
-            count++;
-            r -= dx;
-            c -= dy;
-        }
-        // Kiểm tra chặn đầu kia
-        if (r < 0 || r >= size || c < 0 || c >= size || (board[r][c] !== '' && board[r][c] !== currentPlayer)) {
-            block++;
-        }
-
-        // Nếu bị chặn 1 đầu thì cần 5, không bị chặn thì cần 4
-        return block === 1 ? 5 : 4;
-    }
-
-    // Sửa lại checkDirection để dùng điều kiện thắng động
-    function checkDirection(row, col, dx, dy) {
-        let count = 1;
-        count += countCells(row, col, dx, dy);
-        count += countCells(row, col, -dx, -dy);
-        const winCondition = getWinCondition(row, col, dx, dy);
-        return count >= winCondition;
-    }
-
-    function countCells(row, col, dx, dy) {
-      let r = row + dx;
-      let c = col + dy;
-      let count = 0;
-      while (r >= 0 && r < size && c >= 0 && c < size && board[r][c] === currentPlayer) {
-        count++;
-        r += dx;
-        c += dy;
-      }
-      return count;
-    }
-
-    function resetGame() {
-      currentPlayer = 'X';
-      gameOver = false;
-      document.getElementById('status').textContent = `Lượt: ${currentPlayer}`;
-      createBoard();
-    }
-
-    createBoard();
-  </script>
+    <script src="script.js"></script>
 </body>
 </html>

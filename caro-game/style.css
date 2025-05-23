@@ -1,58 +1,109 @@
+/* Reset một số style mặc định */
 body {
-  font-family: Arial, sans-serif;
-  background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
-  color: #fff;
-  text-align: center;
-  padding: 20px;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 600px; /* Có thể cần điều chỉnh nếu bàn cờ 16x16 lớn hơn */
+    margin: 40px auto;
+    padding: 32px 24px;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 8px 32px rgba(60, 60, 120, 0.15);
+    text-align: center;
 }
 
 h1 {
-  margin-bottom: 20px;
+    color: #2d3a4b;
+    margin-bottom: 24px;
+    letter-spacing: 2px;
 }
 
-#gameBoard {
-  display: grid;
-  grid-template-columns: repeat(15, 40px);
-  grid-template-rows: repeat(15, 40px);
-  gap: 1px;
-  margin: 0 auto;
-  width: fit-content;
+/* Style cho bàn cờ 15x15 (giữ lại nếu cần) */
+.caro-board {
+    display: grid;
+    grid-template-columns: repeat(15, 32px);
+    grid-template-rows: repeat(15, 32px);
+    gap: 2px;
+    justify-content: center;
+    margin: 0 auto 24px auto;
+    background: #b0c4de;
+    border: 3px solid #2d3a4b;
+    border-radius: 8px;
+    padding: 8px;
 }
 
-.cell {
-  width: 40px;
-  height: 40px;
-  background-color: #fff;
-  color: #000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  cursor: pointer;
-  transition: background 0.3s;
+/* Style cho bàn cờ 16x16 */
+.caro-board-16 {
+    display: grid;
+    grid-template-columns: repeat(16, 32px); /* 16 cột */
+    grid-template-rows: repeat(16, 32px);    /* 16 hàng */
+    gap: 2px;
+    justify-content: center;
+    margin: 0 auto 24px auto;
+    background: #b0c4de;
+    border: 3px solid #2d3a4b;
+    border-radius: 8px;
+    padding: 8px;
 }
 
-.cell:hover {
-  background-color: #f0f0f0;
+
+.caro-cell {
+    width: 32px;
+    height: 32px;
+    background: #f8fafc;
+    border: 1px solid #b0c4de;
+    border-radius: 4px;
+    font-size: 22px;
+    font-weight: bold;
+    color: #2d3a4b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s;
 }
 
-#status {
-  margin-top: 20px;
-  font-size: 18px;
+.caro-cell:hover {
+    background: #e3eafc;
+    box-shadow: 0 2px 8px rgba(60, 60, 120, 0.08);
 }
 
-button {
-  margin-top: 20px;
-  padding: 10px 20px;
-  font-size: 16px;
-  cursor: pointer;
-  border: none;
-  border-radius: 5px;
-  background-color: #4caf50;
-  color: white;
-  transition: background 0.3s;
+.caro-cell.x {
+    color: #e74c3c;
+    text-shadow: 0 2px 8px #f8d7da;
 }
 
-button:hover {
-  background-color: #45a049;
+.caro-cell.o {
+    color: #2980b9;
+    text-shadow: 0 2px 8px #d6eaf8;
+}
+
+.status {
+    font-size: 18px;
+    margin-bottom: 16px;
+    color: #34495e;
+}
+
+.button {
+    padding: 10px 24px;
+    background: linear-gradient(90deg, #6dd5ed 0%, #2193b0 100%);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(60, 60, 120, 0.08);
+    transition: background 0.2s, transform 0.2s;
+    margin: 0 8px; /* Thêm khoảng cách giữa các nút */
+}
+
+.button:hover {
+    background: linear-gradient(90deg, #2193b0 0%, #6dd5ed 100%);
+    transform: translateY(-2px) scale(1.04);
 }
