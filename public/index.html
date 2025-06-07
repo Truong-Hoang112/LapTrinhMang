@@ -4,12 +4,15 @@
   <meta charset="UTF-8">
   <title>Caro Game</title>
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
 <body>
   <h1>Caro Game</h1>
   <div id="status"></div>
+  <input id="roomId" value="room1" placeholder="Nhập mã phòng">
+  <button onclick="joinRoom()">Join Room</button>
   <canvas id="board" width="600" height="600"></canvas>
+  <button id="reset">Play Again</button>
   <script src="game.js"></script>
 </body>
 </html>
