@@ -5,7 +5,7 @@ const status = document.getElementById('status');
 const cellSize = 40;
 let mySymbol = null;
 let board = Array(15).fill().map(() => Array(15).fill(null));
-let roomId = 'room1';
+let roomId = 'phong1';
 
 // Hàm vẽ bàn cờ
 function drawBoard(board) {
@@ -56,14 +56,14 @@ canvas.addEventListener('click', (e) => {
 // Nhận cập nhật từ server
 socket.on('playerUpdate', (players) => {
   mySymbol = players[socket.id]?.symbol;
-  status.textContent = `You are ${mySymbol}. Players: ${Object.keys(players).length}/2`;
+  status.textContent = `Bạn là ${mySymbol}. Số người chơi: ${Object.keys(players).length}/2`;
   drawBoard(board); // Vẽ bàn cờ khi tham gia
 });
 
 socket.on('updateBoard', ({ board: newBoard, currentPlayer }) => {
   board = newBoard;
   drawBoard(board);
-  status.textContent = `Current turn: ${currentPlayer}`;
+  status.textContent = `Lượt của: ${currentPlayer}`;
 });
 
 socket.on('gameOver', (message) => {
@@ -83,5 +83,5 @@ document.getElementById('reset').addEventListener('click', () => {
 socket.on('resetGame', () => {
   board = Array(15).fill().map(() => Array(15).fill(null));
   drawBoard(board);
-  status.textContent = `You are ${mySymbol}. Players: ${Object.keys(players).length}/2`;
+  status.textContent = `Bạn là ${mySymbol}. Số người chơi: ${Object.keys(players).length}/2`;
 });

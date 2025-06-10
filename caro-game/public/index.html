@@ -1,18 +1,47 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Caro Game</title>
+  <title>Game Cờ Caro</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
 <body>
-  <h1>Caro Game</h1>
-  <div id="status"></div>
-  <input id="roomId" value="room1" placeholder="Nhập mã phòng">
-  <button onclick="joinRoom()">Join Room</button>
-  <canvas id="board" width="600" height="600"></canvas>
-  <button id="reset">Play Again</button>
+  <header class="game-header">
+    <div class="game-title">
+      <h1>Game Cờ Caro</h1>
+    </div>
+    <div class="user-info">
+      <span id="username"></span>
+      <button onclick="logout()" class="logout-btn">Đăng xuất</button>
+    </div>
+  </header>
+
+  <main class="game-container">
+    <div id="status"></div>
+    <div class="room-controls">
+      <input id="roomId" value="phong1" placeholder="Nhập mã phòng">
+      <button onclick="joinRoom()">Vào Phòng</button>
+    </div>
+    <canvas id="board" width="600" height="600"></canvas>
+    <button id="reset">Chơi Lại</button>
+  </main>
+
+  <script>
+    // Kiểm tra đăng nhập
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) {
+      window.location.href = '/login.html';
+    } else {
+      document.getElementById('username').textContent = `Xin chào, ${user.username}`;
+    }
+
+    // Xử lý đăng xuất
+    function logout() {
+      localStorage.removeItem('user');
+      window.location.href = '/login.html';
+    }
+  </script>
   <script src="game.js"></script>
 </body>
 </html>
