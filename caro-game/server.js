@@ -11,23 +11,17 @@ const io = socketIo(server);
 
 app.use(express.static('public'));
 
-// Chuyển hướng mặc định đến trang đăng nhập
 app.get('/', (req, res) => {
     res.redirect('/login.html');
 });
 
-// Middleware kiểm tra đăng nhập cho trang game
 app.get('/index.html', (req, res, next) => {
-    // Kiểm tra xem có phải là request từ Socket.IO không
     if (req.headers['sec-websocket-protocol']) {
         return next();
     }
-    
-    // Nếu không phải request từ Socket.IO, chuyển hướng về trang đăng nhập
     res.redirect('/login.html');
 });
 
-// Đọc dữ liệu người dùng
 let users = {};
 try {
     const data = fs.readFileSync('users.json', 'utf8');
@@ -43,12 +37,10 @@ try {
     }
 }
 
-// Lưu dữ liệu người dùng
 function saveUsers() {
     fs.writeFileSync('users.json', JSON.stringify(users, null, 2));
 }
 
-// Khởi tạo dữ liệu điểm số
 let scores = {};
 try {
     const data = fs.readFileSync('scores.json', 'utf8');
@@ -64,10 +56,21 @@ try {
     }
 }
 
-// Trạng thái trò chơi
 let rooms = {};
 
-// Hàm kiểm tra chiến thắng
+function createRoom() {
+    return {
+        board: Array(15).fill().map(() => Array(15).fill(null)),
+        currentPlayer: 'X',
+        players: {},
+        isPaused: false,
+        timer: null,
+        timeLeft: 30, // 30 giây cho mỗi lượt
+        messages: [], // Lưu lịch sử chat
+        lastMoveTime: Date.now()
+    };
+}
+
 function checkWin(row, col, player, board) {
     const directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
     for (let [dx, dy] of directions) {
@@ -88,7 +91,6 @@ function checkWin(row, col, player, board) {
 io.on('connection', (socket) => {
     console.log('Người chơi đã kết nối:', socket.id);
 
-    // Xử lý đăng ký
     socket.on('register', async ({ username, password }) => {
         if (users[username]) {
             socket.emit('registerResponse', {
@@ -117,7 +119,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Xử lý đăng nhập
     socket.on('login', async ({ username, password }) => {
         const user = users[username];
         if (!user) {
@@ -152,24 +153,107 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Xử lý tham gia phòng
     socket.on('joinRoom', (roomId) => {
         if (!rooms[roomId] || Object.keys(rooms[roomId].players).length < 2) {
             socket.join(roomId);
-            rooms[roomId] = rooms[roomId] || { board: Array(15).fill().map(() => Array(15).fill(null)), currentPlayer: 'X', players: {} };
-            rooms[roomId].players[socket.id] = { symbol: Object.keys(rooms[roomId].players).length === 0 ? 'X' : 'O' };
+            if (!rooms[roomId]) {
+                rooms[roomId] = createRoom();
+            }
+            rooms[roomId].players[socket.id] = { 
+                symbol: Object.keys(rooms[roomId].players).length === 0 ? 'X' : 'O',
+                username: socket.username || 'Player' + socket.id.slice(0, 4)
+            };
+            
+            socket.emit('roomInfo', {
+                players: rooms[roomId].players,
+                board: rooms[roomId].board,
+                currentPlayer: rooms[roomId].currentPlayer,
+                isPaused: rooms[roomId].isPaused,
+                timeLeft: rooms[roomId].timeLeft,
+                messages: rooms[roomId].messages
+            });
+            
             io.to(roomId).emit('playerUpdate', rooms[roomId].players);
+            
+            if (Object.keys(rooms[roomId].players).length === 2 && !rooms[roomId].timer) {
+                startTimer(roomId);
+            }
         } else {
             socket.emit('roomFull', 'Phòng đã đầy!');
         }
     });
 
-    // Xử lý di chuyển
+    socket.on('sendMessage', ({ roomId, message }) => {
+        if (rooms[roomId] && rooms[roomId].players[socket.id]) {
+            const username = rooms[roomId].players[socket.id].username;
+            const chatMessage = {
+                username,
+                message,
+                timestamp: new Date().toISOString()
+            };
+            rooms[roomId].messages.push(chatMessage);
+            io.to(roomId).emit('newMessage', chatMessage);
+        }
+    });
+
+    socket.on('togglePause', (roomId) => {
+        if (rooms[roomId] && rooms[roomId].players[socket.id]) {
+            rooms[roomId].isPaused = !rooms[roomId].isPaused;
+            if (rooms[roomId].isPaused) {
+                clearInterval(rooms[roomId].timer);
+                rooms[roomId].timer = null;
+            } else {
+                startTimer(roomId);
+            }
+            io.to(roomId).emit('gamePaused', {
+                isPaused: rooms[roomId].isPaused,
+                pausedBy: rooms[roomId].players[socket.id].username
+            });
+        }
+    });
+
+    function startTimer(roomId) {
+        if (rooms[roomId].timer) {
+            clearInterval(rooms[roomId].timer);
+        }
+        rooms[roomId].timeLeft = 30;
+        rooms[roomId].lastMoveTime = Date.now();
+        
+        rooms[roomId].timer = setInterval(() => {
+            if (!rooms[roomId].isPaused) {
+                rooms[roomId].timeLeft--;
+                io.to(roomId).emit('timerUpdate', rooms[roomId].timeLeft);
+                
+                if (rooms[roomId].timeLeft <= 0) {
+                    clearInterval(rooms[roomId].timer);
+                    rooms[roomId].timer = null;
+                    rooms[roomId].currentPlayer = rooms[roomId].currentPlayer === 'X' ? 'O' : 'X';
+                    rooms[roomId].timeLeft = 30;
+                    io.to(roomId).emit('timeUp', {
+                        message: `Hết thời gian! Lượt của ${rooms[roomId].currentPlayer}`,
+                        currentPlayer: rooms[roomId].currentPlayer
+                    });
+                    startTimer(roomId);
+                }
+            }
+        }, 1000);
+    }
+
     socket.on('move', ({ roomId, row, col }) => {
-        if (!rooms[roomId] || !rooms[roomId].players[socket.id] || rooms[roomId].players[socket.id].symbol !== rooms[roomId].currentPlayer || rooms[roomId].board[row][col]) return;
+        if (!rooms[roomId] || 
+            !rooms[roomId].players[socket.id] || 
+            rooms[roomId].players[socket.id].symbol !== rooms[roomId].currentPlayer || 
+            rooms[roomId].board[row][col] ||
+            rooms[roomId].isPaused) return;
 
         rooms[roomId].board[row][col] = rooms[roomId].currentPlayer;
-        io.to(roomId).emit('updateBoard', { board: [...rooms[roomId].board], currentPlayer: rooms[roomId].currentPlayer });
+        rooms[roomId].lastMoveTime = Date.now();
+        rooms[roomId].timeLeft = 30;
+        io.to(roomId).emit('updateBoard', { 
+            board: [...rooms[roomId].board], 
+            currentPlayer: rooms[roomId].currentPlayer,
+            timeLeft: rooms[roomId].timeLeft
+        });
 
         if (checkWin(row, col, rooms[roomId].currentPlayer, rooms[roomId].board)) {
             const winner = rooms[roomId].currentPlayer;
@@ -177,31 +261,48 @@ io.on('connection', (socket) => {
             fs.writeFileSync('scores.json', JSON.stringify(scores));
             io.to(roomId).emit('updateScores', scores);
             io.to(roomId).emit('gameOver', `Người chơi ${winner} thắng!`);
-            rooms[roomId].board = Array(15).fill().map(() => Array(15).fill(null));
-            rooms[roomId].currentPlayer = 'X';
-            rooms[roomId].players = {};
+            clearInterval(rooms[roomId].timer);
+            rooms[roomId].timer = null;
+            rooms[roomId] = createRoom();
         } else {
             rooms[roomId].currentPlayer = rooms[roomId].currentPlayer === 'X' ? 'O' : 'X';
-            io.to(roomId).emit('updateBoard', { board: [...rooms[roomId].board], currentPlayer: rooms[roomId].currentPlayer });
+            io.to(roomId).emit('updateBoard', { 
+                board: [...rooms[roomId].board], 
+                currentPlayer: rooms[roomId].currentPlayer,
+                timeLeft: rooms[roomId].timeLeft
+            });
         }
     });
 
-    // Xử lý ngắt kết nối
     socket.on('disconnect', () => {
         console.log('Người chơi đã ngắt kết nối:', socket.id);
         for (let roomId in rooms) {
             if (rooms[roomId].players[socket.id]) {
                 delete rooms[roomId].players[socket.id];
                 io.to(roomId).emit('playerUpdate', rooms[roomId].players);
+                
                 if (Object.keys(rooms[roomId].players).length === 0) {
+                    if (rooms[roomId].timer) {
+                        clearInterval(rooms[roomId].timer);
+                    }
                     delete rooms[roomId];
+                } else {
+                    rooms[roomId].isPaused = true;
+                    if (rooms[roomId].timer) {
+                        clearInterval(rooms[roomId].timer);
+                        rooms[roomId].timer = null;
+                    }
+                    io.to(roomId).emit('gamePaused', {
+                        isPaused: true,
+                        pausedBy: 'system',
+                        message: 'Game tạm dừng do một người chơi rời đi'
+                    });
                 }
                 break;
             }
         }
     });
 
-    // Reset game
     socket.on('resetGame', (roomId) => {
         if (rooms[roomId]) {
             rooms[roomId].board = Array(15).fill().map(() => Array(15).fill(null));
