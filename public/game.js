@@ -200,7 +200,7 @@ if (!canvas) {
     }
   });
 
-  // Vẽ bàn cờ ban đầu khi trang tải
+  // Vẽ bàn cờ ban đầu khi trang 
   window.onload = () => {
     drawBoard(board); // Vẽ bàn cờ ngay khi trang tải
     if (!isAIMode) {
