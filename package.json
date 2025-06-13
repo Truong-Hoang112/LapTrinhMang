@@ -1,0 +1,14 @@
+{
+  "name": "caro-game",
+  "version": "1.0.0",
+  "description": "Multiplayer Caro game",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "express": "^4.17.1",
+    "socket.io": "^4.5.0"
+  }
+}
