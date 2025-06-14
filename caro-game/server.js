@@ -10,6 +10,7 @@ const server = http.createServer(app);
 const io = socketIo(server);
 
 app.use(express.static('public'));
+app.use(express.json());
 
 app.get('/', (req, res) => {
     res.redirect('/login.html');
@@ -193,6 +194,49 @@ io.on('connection', (socket) => {
             io.to(roomId).emit('resetGame');
         }
     });
+});
+
+// Đăng ký
+app.post('/api/register', async (req, res) => {
+    const { username, password } = req.body;
+    if (users[username]) {
+        return res.status(400).json({ success: false, message: 'Tên đăng nhập đã tồn tại!' });
+    }
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        users[username] = { password: hashedPassword, score: 0 };
+        saveUsers();
+        res.json({ success: true, message: 'Đăng ký thành công!' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Lỗi đăng ký!' });
+    }
+});
+
+// Đăng nhập
+app.post('/api/login', async (req, res) => {
+    const { username, password } = req.body;
+    const user = users[username];
+    if (!user) {
+        return res.status(401).json({ success: false, message: 'Tên đăng nhập không tồn tại!' });
+    }
+    try {
+        const match = await bcrypt.compare(password, user.password);
+        if (match) {
+            // Lưu trạng thái đăng nhập vào session (nếu có dùng express-session)
+            // req.session.user = { username, score: user.score };
+            res.json({ success: true, user: { username, score: user.score } });
+        } else {
+            res.status(401).json({ success: false, message: 'Mật khẩu không đúng!' });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Lỗi đăng nhập!' });
+    }
+});
+
+// Lấy thông tin user (giả lập, chưa có session)
+app.get('/api/user', (req, res) => {
+    // Nếu có dùng session thì kiểm tra req.session.user
+    res.status(401).json({ success: false, message: 'Chưa đăng nhập!' });
 });
 
 server.listen(3000, () => {
