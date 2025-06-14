@@ -299,6 +299,23 @@ form button:hover {
     padding: 10px;
   }
 }
+/* Button Styles */
+button {
+  padding: 8px 16px;
+  margin: 5px;
+  cursor: pointer;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  background-color: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
 
 /* Style cho nút Chơi với Máy */
 #toggleAI {
@@ -307,192 +324,4 @@ form button:hover {
 
 #toggleAI:hover {
   background-color: #1976D2;
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-.game-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding: 10px;
-  background-color: #f5f5f5;
-  border-radius: 5px;
-}
-
-.player-info {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.timer {
-  font-size: 1.2em;
-  color: #333;
-  background-color: #fff;
-  padding: 5px 10px;
-  border-radius: 5px;
-  border: 1px solid #ddd;
-}
-
-.game-controls {
-  display: flex;
-  gap: 10px;
-}
-
-.game-controls button {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 5px;
-  background-color: #4CAF50;
-  color: white;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.game-controls button:hover {
-  background-color: #45a049;
-}
-
-.game-container {
-  display: flex;
-  gap: 20px;
-}
-
-.board-container {
-  flex: 1;
-}
-
-.chat-container {
-  width: 300px;
-  display: flex;
-  flex-direction: column;
-  background-color: #f5f5f5;
-  border-radius: 5px;
-  overflow: hidden;
-}
-
-.chat-messages {
-  flex: 1;
-  padding: 10px;
-  overflow-y: auto;
-  max-height: 400px;
-  background-color: white;
-}
-
-.chat-message {
-  margin-bottom: 10px;
-  padding: 8px;
-  border-radius: 5px;
-  background-color: #e9ecef;
-}
-
-.chat-message .username {
-  font-weight: bold;
-  color: #2196F3;
-}
-
-.chat-message .timestamp {
-  font-size: 0.8em;
-  color: #666;
-  margin-left: 5px;
-}
-
-.chat-input {
-  display: flex;
-  padding: 10px;
-  gap: 10px;
-  background-color: #f8f9fa;
-  border-top: 1px solid #ddd;
-}
-
-.chat-input input {
-  flex: 1;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-
-.chat-input button {
-  padding: 8px 16px;
-  background-color: #2196F3;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.chat-input button:hover {
-  background-color: #1976D2;
-}
-
-.modal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
-}
-
-.modal-content {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: white;
-  padding: 20px;
-  border-radius: 5px;
-  text-align: center;
-}
-
-.modal-content button {
-  margin-top: 15px;
-  padding: 8px 16px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.modal-content button:hover {
-  background-color: #45a049;
-}
-
-.game-status {
-  margin-top: 20px;
-  padding: 10px;
-  text-align: center;
-  font-size: 1.2em;
-  color: #333;
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-  .game-container {
-    flex-direction: column;
-  }
-
-  .chat-container {
-    width: 100%;
-    max-height: 300px;
-  }
-
-  .game-info {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .player-info {
-    flex-direction: column;
-    align-items: flex-start;
-  }
 }

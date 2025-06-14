@@ -1,5 +1,3 @@
-const socket = io();
-
 // Chuyển đổi giữa các tab
 function showTab(tabName) {
     // Ẩn tất cả các tab
@@ -20,48 +18,99 @@ function showTab(tabName) {
 }
 
 // Xử lý đăng nhập
-function handleLogin(event) {
+async function handleLogin(event) {
     event.preventDefault();
     
     const username = document.getElementById('loginUsername').value;
     const password = document.getElementById('loginPassword').value;
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-message';
     
-    socket.emit('login', { username, password });
+    try {
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username, password })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            window.location.href = '/index.html';
+        } else {
+            // Xóa thông báo lỗi cũ nếu có
+            const oldError = document.querySelector('.error-message');
+            if (oldError) oldError.remove();
+            
+            errorDiv.textContent = data.message;
+            document.getElementById('loginForm').appendChild(errorDiv);
+        }
+    } catch (error) {
+        console.error('Lỗi đăng nhập:', error);
+        errorDiv.textContent = 'Lỗi kết nối server!';
+        document.getElementById('loginForm').appendChild(errorDiv);
+    }
 }
 
 // Xử lý đăng ký
-function handleRegister(event) {
+async function handleRegister(event) {
     event.preventDefault();
     
     const username = document.getElementById('registerUsername').value;
     const password = document.getElementById('registerPassword').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-message';
     
     if (password !== confirmPassword) {
-        alert('Mật khẩu xác nhận không khớp!');
+        errorDiv.textContent = 'Mật khẩu xác nhận không khớp!';
+        document.getElementById('registerForm').appendChild(errorDiv);
         return false;
     }
     
-    socket.emit('register', { username, password });
+    try {
+        const response = await fetch('/api/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username, password })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('Đăng ký thành công! Vui lòng đăng nhập.');
+            showTab('login');
+        } else {
+            // Xóa thông báo lỗi cũ nếu có
+            const oldError = document.querySelector('.error-message');
+            if (oldError) oldError.remove();
+            
+            errorDiv.textContent = data.message;
+            document.getElementById('registerForm').appendChild(errorDiv);
+        }
+    } catch (error) {
+        console.error('Lỗi đăng ký:', error);
+        errorDiv.textContent = 'Lỗi kết nối server!';
+        document.getElementById('registerForm').appendChild(errorDiv);
+    }
 }
 
-// Xử lý phản hồi từ server
-socket.on('loginResponse', (response) => {
-    if (response.success) {
-        // Lưu thông tin người dùng
-        localStorage.setItem('user', JSON.stringify(response.user));
-        // Chuyển hướng đến trang game
-        window.location.href = '/index.html';
-    } else {
-        alert(response.message);
+// Kiểm tra trạng thái đăng nhập khi tải trang
+async function checkAuthStatus() {
+    try {
+        const response = await fetch('/api/user');
+        const data = await response.json();
+        if (data.success) {
+            window.location.href = '/index.html';
+        }
+    } catch (error) {
+        console.error('Lỗi kiểm tra trạng thái đăng nhập:', error);
     }
-});
+}
 
-socket.on('registerResponse', (response) => {
-    if (response.success) {
-        alert('Đăng ký thành công! Vui lòng đăng nhập.');
-        showTab('login');
-    } else {
-        alert(response.message);
-    }
-}); 
+// Gọi hàm kiểm tra khi tải trang
+checkAuthStatus(); 

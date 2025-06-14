@@ -2,51 +2,31 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Game Caro</title>
+  <title>Game Cờ Caro</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script> <!-- Đảm bảo tải Socket.IO -->
 </head>
 <body>
-  <div class="container">
-    <div class="game-info">
-      <div class="player-info">
-        <h2>Người chơi hiện tại: <span id="currentPlayer">X</span></h2>
-        <div class="timer">
-          <span>Thời gian còn lại: </span>
-          <span id="timeLeft">30</span>s
-        </div>
-      </div>
-      <div class="game-controls">
-        <button id="pauseBtn">Tạm dừng</button>
-        <button id="resetBtn">Chơi lại</button>
-      </div>
+  <header class="game-header">
+    <div class="game-title">
+      <h1>Game Cờ Caro</h1>
     </div>
-
-    <div class="game-container">
-      <div class="board-container">
-        <div id="board"></div>
-      </div>
-      
-      <div class="chat-container">
-        <div class="chat-messages" id="chatMessages"></div>
-        <div class="chat-input">
-          <input type="text" id="messageInput" placeholder="Nhập tin nhắn...">
-          <button id="sendMessage">Gửi</button>
-        </div>
-      </div>
+    <div class="user-info">
+      <span id="username"></span>
+      <button onclick="logout()" class="logout-btn">Đăng xuất</button>
     </div>
+  </header>
 
-    <div id="gameStatus" class="game-status"></div>
-  </div>
-
-  <div id="pauseModal" class="modal">
-    <div class="modal-content">
-      <h2>Game đã tạm dừng</h2>
-      <p id="pauseMessage"></p>
-      <button id="resumeBtn">Tiếp tục</button>
+  <main class="game-container">
+    <div id="status"></div>
+    <div class="room-controls">
+      <input id="roomId" value="phong1" placeholder="Nhập mã phòng">
+      <button onclick="joinRoom()">Vào Phòng</button>
+      <button id="toggleAI" onclick="toggleAIMode()">Chơi với Máy</button>
     </div>
-  </div>
+    <canvas id="board" width="600" height="600" style="border: 1px solid #000;"></canvas> <!-- Thêm border để dễ thấy -->
+    <button id="reset">Chơi Lại</button>
+  </main>
 
   <script>
     const user = JSON.parse(localStorage.getItem('user'));
