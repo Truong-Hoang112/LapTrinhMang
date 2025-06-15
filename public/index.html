@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Game Cờ Caro</title>
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script> <!-- Đảm bảo tải Socket.IO -->
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
 <body>
   <header class="game-header">
@@ -19,12 +19,12 @@
 
   <main class="game-container">
     <div id="status"></div>
-    <div class="room-controls">
+    <div id="score"></div>
+    <div class="room-controls" id="roomControls" style="display: none;">
       <input id="roomId" value="phong1" placeholder="Nhập mã phòng">
       <button onclick="joinRoom()">Vào Phòng</button>
-      <button id="toggleAI" onclick="toggleAIMode()">Chơi với Máy</button>
     </div>
-    <canvas id="board" width="600" height="600" style="border: 1px solid #000;"></canvas> <!-- Thêm border để dễ thấy -->
+    <canvas id="board" width="600" height="600" style="border: 1px solid #000;"></canvas>
     <button id="reset">Chơi Lại</button>
   </main>
 
@@ -41,19 +41,19 @@
       window.location.href = '/login.html';
     }
 
-    let isAIMode = false;
-    function toggleAIMode() {
-      isAIMode = !isAIMode;
-      document.getElementById('toggleAI').textContent = isAIMode ? 'Chuyển sang Chơi với Người' : 'Chơi với Máy';
-      if (isAIMode) {
-        socket.disconnect();
-        resetGameForAI();
-      } else {
-        socket.connect();
-        joinRoom();
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('mode');
+    let isAIMode = mode === 'ai';
+
+    document.getElementById('roomControls').style.display = isAIMode ? 'none' : 'block';
+
+    function joinRoom() {
+      if (!isAIMode) {
+        roomId = document.getElementById('roomId').value;
+        socket.emit('joinRoom', roomId);
       }
     }
   </script>
-  <script src="game.js"></script> <!-- Đảm bảo file game.js được tải -->
+  <script src="game.js"></script>
 </body>
 </html>

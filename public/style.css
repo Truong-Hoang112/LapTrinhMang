@@ -1,3 +1,4 @@
+/* Style chung */
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
@@ -21,6 +22,8 @@ body {
   left: 0;
   right: 0;
   z-index: 1000;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .game-title h1 {
@@ -30,15 +33,26 @@ body {
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.game-title .subtitle {
+  margin: 5px 0 0;
+  font-size: 1em;
+  color: #333;
+}
+
 .user-info {
   display: flex;
   align-items: center;
   gap: 15px;
+  max-width: 50%;
+  overflow: hidden;
 }
 
 .user-info span {
   font-size: 1.1em;
   color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .logout-btn {
@@ -49,6 +63,7 @@ body {
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.3s ease;
+  white-space: nowrap;
 }
 
 .logout-btn:hover {
@@ -59,40 +74,106 @@ body {
 
 /* Game Container Styles */
 .game-container {
-  margin-top: 100px;
+  margin-top: 10vh; /* Dựa trên chiều cao viewport */
   padding: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 40px;
+  min-height: calc(90vh - 20px);
 }
 
-.room-controls {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-#roomId {
-  padding: 8px 12px;
-  border: 2px solid #e0e0e0;
-  border-radius: 4px;
-  font-size: 14px;
-  width: 200px;
-}
-
-#roomId:focus {
-  border-color: #4CAF50;
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
-}
-
-#status {
+.welcome-message {
   font-size: 1.2em;
   color: #333;
   text-align: center;
   margin-bottom: 10px;
+}
+
+.game-preview {
+  display: none; /* Ẩn hoàn toàn game-preview và board-preview */
+}
+
+.board-preview {
+  display: none; /* Ẩn board-preview */
+  width: 200px;
+  height: 200px;
+  background-color: #ecf0f1;
+  margin: 0 auto 30px auto;
+  display: grid;
+  grid-template-columns: repeat(15, 1fr);
+  border: 2px solid #333;
+  border-radius: 5px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  clear: both;
+}
+
+.board-preview div {
+  border: 1px solid #bdc3c7;
+}
+
+.board-preview div:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+.board-preview div:nth-child(even) {
+  background-color: #e0e0e0;
+}
+
+.board-preview div:nth-child(15n+1):nth-child(odd),
+.board-preview div:nth-child(15n+2):nth-child(even),
+.board-preview div:nth-child(15n+3):nth-child(odd),
+.board-preview div:nth-child(15n+4):nth-child(even),
+.board-preview div:nth-child(15n+5):nth-child(odd),
+.board-preview div:nth-child(15n+6):nth-child(even),
+.board-preview div:nth-child(15n+7):nth-child(odd),
+.board-preview div:nth-child(15n+8):nth-child(even),
+.board-preview div:nth-child(15n+9):nth-child(odd),
+.board-preview div:nth-child(15n+10):nth-child(even),
+.board-preview div:nth-child(15n+11):nth-child(odd),
+.board-preview div:nth-child(15n+12):nth-child(even),
+.board-preview div:nth-child(15n+13):nth-child(odd),
+.board-preview div:nth-child(15n+14):nth-child(even),
+.board-preview div:nth-child(15n+15):nth-child(odd) {
+  background-color: #ffffff;
+}
+
+.mode-selection {
+  text-align: center;
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  max-width: 600px;
+  width: 90%;
+  margin: 0 auto;
+  clear: both;
+}
+
+.mode-selection h2 {
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.mode-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.mode-btn {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.mode-btn:hover {
+  background-color: #45a049;
 }
 
 /* Canvas Styles */
@@ -262,8 +343,13 @@ form button:hover {
     font-size: 2em;
   }
 
+  .game-title .subtitle {
+    font-size: 0.9em;
+  }
+
   .user-info {
     gap: 10px;
+    max-width: 60%;
   }
 
   .user-info span {
@@ -271,12 +357,19 @@ form button:hover {
   }
 
   .game-container {
-    margin-top: 80px;
+    margin-top: 10vh;
     padding: 10px;
+    gap: 30px;
   }
 
-  #roomId {
-    width: 150px;
+  .mode-selection {
+    padding: 15px;
+    width: 95%;
+  }
+
+  canvas {
+    width: 400px !important;
+    height: 400px !important;
   }
 }
 
@@ -298,23 +391,29 @@ form button:hover {
   form button {
     padding: 10px;
   }
-}
-/* Button Styles */
-button {
-  padding: 8px 16px;
-  margin: 5px;
-  cursor: pointer;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  transition: all 0.3s ease;
-}
 
-button:hover {
-  background-color: #45a049;
-  transform: translateY(-2px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  .user-info {
+    flex-wrap: wrap;
+  }
+
+  .logout-btn {
+    padding: 6px 12px;
+    font-size: 14px;
+  }
+
+  .mode-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .mode-btn {
+    width: 100%;
+  }
+
+  canvas {
+    width: 300px !important;
+    height: 300px !important;
+  }
 }
 
 /* Style cho nút Chơi với Máy */

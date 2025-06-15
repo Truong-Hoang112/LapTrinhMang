@@ -2,12 +2,15 @@ const socket = io();
 const canvas = document.getElementById('board');
 if (!canvas) {
   console.error('Canvas element not found!');
+  alert('Không thể tải bàn cờ. Vui lòng làm mới trang.');
 } else {
   const ctx = canvas.getContext('2d');
   if (!ctx) {
     console.error('Failed to get 2D context!');
+    alert('Không thể khởi tạo bàn cờ. Vui lòng thử lại.');
   }
   const status = document.getElementById('status');
+  const score = document.getElementById('score');
   const cellSize = 40;
   let mySymbol = 'X';
   let board = Array(15).fill().map(() => Array(15).fill(null));
@@ -15,13 +18,16 @@ if (!canvas) {
   let isAIMode = false;
   let aiTurn = false;
 
+  // Lấy tham số mode từ URL
+  const urlParams = new URLSearchParams(window.location.search);
+  isAIMode = urlParams.get('mode') === 'ai';
+
   // Hàm vẽ bàn cờ
   function drawBoard(board) {
     if (!ctx) {
       console.error('Canvas context is not available');
       return;
     }
-    console.log('Drawing board...');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     for (let i = 0; i <= 15; i++) {
       ctx.beginPath();
@@ -73,9 +79,11 @@ if (!canvas) {
 
   // Tham gia phòng
   function joinRoom() {
-    roomId = document.getElementById('roomId').value;
-    socket.emit('joinRoom', roomId);
-    drawBoard(board); // Vẽ bàn cờ khi tham gia phòng
+    if (!isAIMode) {
+      roomId = document.getElementById('roomId').value;
+      socket.emit('joinRoom', roomId);
+      drawBoard(board);
+    }
   }
 
   // Xử lý click
@@ -114,22 +122,45 @@ if (!canvas) {
     if (!aiTurn) return;
 
     let found = false;
-    while (!found) {
-      const row = Math.floor(Math.random() * 15);
-      const col = Math.floor(Math.random() * 15);
-      if (!board[row][col]) {
-        board[row][col] = 'O';
-        drawBoard(board);
-        if (checkWin(row, col, 'O', board)) {
-          status.textContent = 'Máy thắng!';
-          alert('Máy thắng!');
-          aiTurn = false;
-          return;
+    let bestRow, bestCol;
+
+    // Logic chặn nếu người chơi sắp thắng
+    for (let row = 0; row < 15 && !found; row++) {
+      for (let col = 0; col < 15 && !found; col++) {
+        if (!board[row][col]) {
+          board[row][col] = 'O'; // Giả lập nước đi
+          if (checkWin(row, col, 'O', board)) {
+            bestRow = row;
+            bestCol = col;
+            found = true;
+          }
+          board[row][col] = null; // Hoàn tác
         }
-        aiTurn = false;
-        found = true;
       }
     }
+
+    // Nếu không chặn được, chọn ngẫu nhiên
+    if (!found) {
+      while (!found) {
+        const row = Math.floor(Math.random() * 15);
+        const col = Math.floor(Math.random() * 15);
+        if (!board[row][col]) {
+          bestRow = row;
+          bestCol = col;
+          found = true;
+        }
+      }
+    }
+
+    board[bestRow][bestCol] = 'O';
+    drawBoard(board);
+    if (checkWin(bestRow, bestCol, 'O', board)) {
+      status.textContent = 'Máy thắng!';
+      alert('Máy thắng!');
+      aiTurn = false;
+      return;
+    }
+    aiTurn = false;
   }
 
   // Reset game
@@ -139,19 +170,6 @@ if (!canvas) {
     aiTurn = false;
     drawBoard(board);
     status.textContent = 'Chế độ chơi với máy. Bạn đi trước!';
-  }
-
-  // Chuyển đổi chế độ
-  function toggleAIMode() {
-    isAIMode = !isAIMode;
-    document.getElementById('toggleAI').textContent = isAIMode ? 'Chuyển sang Chơi với Người' : 'Chơi với Máy';
-    if (isAIMode) {
-      socket.disconnect();
-      resetGameForAI();
-    } else {
-      socket.connect();
-      joinRoom();
-    }
   }
 
   // Nhận cập nhật từ server
@@ -184,6 +202,12 @@ if (!canvas) {
     }
   });
 
+  socket.on('updateScores', (scores) => {
+    if (score) {
+      score.textContent = `Điểm của bạn: ${scores[mySymbol] || 0}`;
+    }
+  });
+
   document.getElementById('reset').addEventListener('click', () => {
     if (isAIMode) {
       resetGameForAI();
@@ -200,10 +224,19 @@ if (!canvas) {
     }
   });
 
-  // Vẽ bàn cờ ban đầu khi trang 
+  // Xử lý thoát game
+  window.addEventListener('beforeunload', () => {
+    if (!isAIMode && socket.connected) {
+      socket.emit('leaveRoom', roomId);
+    }
+  });
+
+  // Vẽ bàn cờ ban đầu khi trang tải
   window.onload = () => {
-    drawBoard(board); // Vẽ bàn cờ ngay khi trang tải
-    if (!isAIMode) {
+    drawBoard(board);
+    if (isAIMode) {
+      resetGameForAI();
+    } else {
       joinRoom();
     }
   };
