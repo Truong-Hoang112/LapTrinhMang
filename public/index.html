@@ -25,7 +25,7 @@
       <button onclick="joinRoom()">Vào Phòng</button>
     </div>
     <div id="roomCodeDisplay" style="margin-top: 10px; color: #333; display: none;"></div>
-    <canvas id="board" width="600" height="600" style="border: 1px solid #000;"></canvas>
+    <canvas id="board" style="border: 1px solid #000;"></canvas>
     <button id="reset">Chơi Lại</button>
     <button onclick="goBackToHome()" class="mode-btn" style="margin-top: 10px;">Quay lại</button>
   </main>
@@ -45,8 +45,15 @@
 
     const urlParams = new URLSearchParams(window.location.search);
     const mode = urlParams.get('mode');
-    let isAIMode = mode === 'ai';
+    const isAIMode = mode === 'ai';
     const roomId = urlParams.get('roomId');
+    const size = urlParams.get('size') || '15x15';
+    const [rows, cols] = size.split('x').map(Number);
+    const cellSize = size === '3x3' ? 80 : 40; // 80px cho 3x3, 40px cho 15x15
+    const canvasElement = document.getElementById('board');
+    canvasElement.width = cols * cellSize;
+    canvasElement.height = rows * cellSize;
+    console.log(`Canvas initialized: width=${canvasElement.width}, height=${canvasElement.height}, rows=${rows}, cols=${cols}, cellSize=${cellSize}`);
 
     if (!isAIMode && roomId) {
       document.getElementById('roomControls').style.display = 'none';
@@ -56,21 +63,21 @@
       document.getElementById('roomControls').style.display = isAIMode ? 'none' : 'block';
     }
 
-    function joinRoom() {
+    window.joinRoom = function() {
       if (!isAIMode) {
         const inputRoomId = document.getElementById('roomId').value;
         if (inputRoomId) {
-          window.location.href = `/index.html?mode=multiplayer&roomId=${inputRoomId}`;
+          window.location.href = `/index.html?mode=multiplayer&roomId=${inputRoomId}&size=${size}`;
         } else {
           alert('Vui lòng nhập mã phòng!');
         }
       }
-    }
+    };
 
-    function goBackToHome() {
+    window.goBackToHome = function() {
       window.location.href = '/home.html';
-    }
+    };
   </script>
-  <script src="game.js"></script>
+  <script src="game.js" defer></script>
 </body>
 </html>

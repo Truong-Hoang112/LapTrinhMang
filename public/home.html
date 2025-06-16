@@ -24,10 +24,17 @@
         <div class="board-preview"></div>
       </div>
       <div class="mode-selection">
-        <h2>Chọn chế độ chơi:</h2>
-        <div class="mode-buttons">
-          <button onclick="startGame('multiplayer')" class="mode-btn">Chơi với Người</button>
-          <button onclick="startGame('ai')" class="mode-btn">Chơi với Máy</button>
+        <h2>Chọn kích thước bàn cờ:</h2>
+        <div class="mode-buttons" id="size-selection">
+          <button onclick="selectSize('3x3')" class="mode-btn">3x3</button>
+          <button onclick="selectSize('15x15')" class="mode-btn">15x15</button>
+        </div>
+        <div id="mode-selection" style="display: none; margin-top: 20px;">
+          <h2>Chọn chế độ chơi:</h2>
+          <div class="mode-buttons">
+            <button onclick="startGame('multiplayer')" class="mode-btn">Chơi với Người</button>
+            <button onclick="startGame('ai')" class="mode-btn">Chơi với Máy</button>
+          </div>
         </div>
       </div>
     </div>
@@ -47,12 +54,23 @@
       window.location.href = '/login.html';
     }
 
+    function selectSize(size) {
+      localStorage.setItem('boardSize', size);
+      document.getElementById('size-selection').style.display = 'none';
+      document.getElementById('mode-selection').style.display = 'block';
+    }
+
     function startGame(mode) {
+      const size = localStorage.getItem('boardSize');
       if (mode === 'multiplayer') {
-        window.location.href = '/room.html';
+        window.location.href = `/room.html?size=${size}`;
       } else if (mode === 'ai') {
-        window.location.href = '/index.html?mode=ai';
+        window.location.href = `/index.html?mode=ai&size=${size}`;
       }
+    }
+
+    function goBackToHome() {
+      window.location.href = '/home.html';
     }
   </script>
 </body>

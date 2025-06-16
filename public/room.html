@@ -47,11 +47,14 @@
       window.location.href = '/login.html';
     }
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const size = urlParams.get('size') || '15x15';
+
     function createRoom() {
       const roomId = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
       document.getElementById('roomCodeDisplay').textContent = `Mã phòng của bạn: ${roomId}`;
       document.getElementById('joinRoomSection').style.display = 'none';
-      window.location.href = `/index.html?mode=multiplayer&roomId=${roomId}`;
+      window.location.href = `/index.html?mode=multiplayer&roomId=${roomId}&size=${size}`;
     }
 
     function joinRoom() {
@@ -61,7 +64,7 @@
     function confirmJoin() {
       const roomId = document.getElementById('roomIdInput').value;
       if (roomId) {
-        window.location.href = `/index.html?mode=multiplayer&roomId=${roomId}`;
+        window.location.href = `/index.html?mode=multiplayer&roomId=${roomId}&size=${size}`;
       } else {
         alert('Vui lòng nhập mã phòng!');
       }
