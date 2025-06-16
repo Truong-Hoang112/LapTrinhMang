@@ -74,7 +74,7 @@ body {
 
 /* Game Container Styles */
 .game-container {
-  margin-top: 10vh; /* Dựa trên chiều cao viewport */
+  margin-top: 80px; /* Tăng khoảng cách trên để tránh bị che bởi header */
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -83,11 +83,17 @@ body {
   min-height: calc(90vh - 20px);
 }
 
+.content-wrapper {
+  width: 100%;
+  max-width: 600px;
+}
+
 .welcome-message {
   font-size: 1.2em;
   color: #333;
   text-align: center;
   margin-bottom: 10px;
+  padding-top: 10px; /* Thêm padding trên để đảm bảo hiển thị */
 }
 
 .game-preview {
@@ -357,9 +363,13 @@ form button:hover {
   }
 
   .game-container {
-    margin-top: 10vh;
+    margin-top: 70px; /* Giảm khoảng cách trên cho thiết bị nhỏ */
     padding: 10px;
     gap: 30px;
+  }
+
+  .content-wrapper {
+    max-width: 90%;
   }
 
   .mode-selection {

@@ -21,9 +21,10 @@
     <div id="status"></div>
     <div id="score"></div>
     <div class="room-controls" id="roomControls" style="display: none;">
-      <input id="roomId" value="phong1" placeholder="Nhập mã phòng">
+      <input id="roomId" placeholder="Nhập mã phòng">
       <button onclick="joinRoom()">Vào Phòng</button>
     </div>
+    <div id="roomCodeDisplay" style="margin-top: 10px; color: #333; display: none;"></div>
     <canvas id="board" width="600" height="600" style="border: 1px solid #000;"></canvas>
     <button id="reset">Chơi Lại</button>
   </main>
@@ -44,13 +45,24 @@
     const urlParams = new URLSearchParams(window.location.search);
     const mode = urlParams.get('mode');
     let isAIMode = mode === 'ai';
+    const roomId = urlParams.get('roomId');
 
-    document.getElementById('roomControls').style.display = isAIMode ? 'none' : 'block';
+    if (!isAIMode && roomId) {
+      document.getElementById('roomControls').style.display = 'none'; // Ẩn thanh vào phòng
+      document.getElementById('roomCodeDisplay').style.display = 'block'; // Hiển thị mã phòng
+      document.getElementById('roomCodeDisplay').textContent = `Mã phòng: ${roomId}`;
+    } else {
+      document.getElementById('roomControls').style.display = isAIMode ? 'none' : 'block'; // Hiển thị thanh vào phòng nếu chưa có roomId
+    }
 
     function joinRoom() {
       if (!isAIMode) {
-        roomId = document.getElementById('roomId').value;
-        socket.emit('joinRoom', roomId);
+        const inputRoomId = document.getElementById('roomId').value;
+        if (inputRoomId) {
+          window.location.href = `/index.html?mode=multiplayer&roomId=${inputRoomId}`;
+        } else {
+          alert('Vui lòng nhập mã phòng!');
+        }
       }
     }
   </script>

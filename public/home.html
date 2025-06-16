@@ -18,15 +18,17 @@
   </header>
 
   <main class="game-container">
-    <div id="status" class="welcome-message">Chào mừng <span id="welcome-user"></span> đến với Game Cờ Caro!</div>
-    <div class="game-preview">
-      <div class="board-preview"></div>
-    </div>
-    <div class="mode-selection">
-      <h2>Chọn chế độ chơi:</h2>
-      <div class="mode-buttons">
-        <button onclick="startGame('multiplayer')" class="mode-btn">Chơi với Người</button>
-        <button onclick="startGame('ai')" class="mode-btn">Chơi với Máy</button>
+    <div class="content-wrapper">
+      <div id="status" class="welcome-message">Chào mừng <span id="welcome-user"></span> đến với Game Cờ Caro!</div>
+      <div class="game-preview">
+        <div class="board-preview"></div>
+      </div>
+      <div class="mode-selection">
+        <h2>Chọn chế độ chơi:</h2>
+        <div class="mode-buttons">
+          <button onclick="startGame('multiplayer')" class="mode-btn">Chơi với Người</button>
+          <button onclick="startGame('ai')" class="mode-btn">Chơi với Máy</button>
+        </div>
       </div>
     </div>
   </main>
@@ -47,7 +49,7 @@
 
     function startGame(mode) {
       if (mode === 'multiplayer') {
-        window.location.href = '/index.html?mode=multiplayer';
+        window.location.href = '/room.html';
       } else if (mode === 'ai') {
         window.location.href = '/index.html?mode=ai';
       }

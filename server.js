@@ -206,6 +206,12 @@ io.on('connection', (socket) => {
   });
 });
 
+app.get('/room.html', (req, res, next) => {
+  if (req.headers['sec-websocket-protocol']) {
+    return next();
+  }
+  res.sendFile(path.join(__dirname, 'public', 'room.html'));
+});
 setInterval(() => {
   for (let roomId in rooms) {
     if (Object.keys(rooms[roomId].players).length === 0) {

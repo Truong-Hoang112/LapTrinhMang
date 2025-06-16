@@ -14,13 +14,17 @@ if (!canvas) {
   const cellSize = 40;
   let mySymbol = 'X';
   let board = Array(15).fill().map(() => Array(15).fill(null));
-  let roomId = 'phong1';
+  let roomId = ''; // Không có mặc định
   let isAIMode = false;
   let aiTurn = false;
 
-  // Lấy tham số mode từ URL
+  // Lấy tham số mode và roomId từ URL
   const urlParams = new URLSearchParams(window.location.search);
   isAIMode = urlParams.get('mode') === 'ai';
+  const urlRoomId = urlParams.get('roomId');
+  if (!isAIMode && urlRoomId) {
+    roomId = urlRoomId;
+  }
 
   // Hàm vẽ bàn cờ
   function drawBoard(board) {
@@ -79,10 +83,11 @@ if (!canvas) {
 
   // Tham gia phòng
   function joinRoom() {
-    if (!isAIMode) {
-      roomId = document.getElementById('roomId').value;
+    if (!isAIMode && roomId) {
       socket.emit('joinRoom', roomId);
       drawBoard(board);
+    } else if (!isAIMode) {
+      alert('Không có mã phòng để tham gia!');
     }
   }
 
@@ -90,7 +95,7 @@ if (!canvas) {
   canvas.addEventListener('click', (e) => {
     if (isAIMode) {
       handleAIMove(e);
-    } else if (!isAIMode && socket.connected) {
+    } else if (!isAIMode && socket.connected && roomId) {
       const rect = canvas.getBoundingClientRect();
       const row = Math.floor((e.clientY - rect.top) / cellSize);
       const col = Math.floor((e.clientX - rect.left) / cellSize);
@@ -211,7 +216,7 @@ if (!canvas) {
   document.getElementById('reset').addEventListener('click', () => {
     if (isAIMode) {
       resetGameForAI();
-    } else if (socket.connected) {
+    } else if (socket.connected && roomId) {
       socket.emit('resetGame', roomId);
     }
   });
@@ -226,7 +231,7 @@ if (!canvas) {
 
   // Xử lý thoát game
   window.addEventListener('beforeunload', () => {
-    if (!isAIMode && socket.connected) {
+    if (!isAIMode && socket.connected && roomId) {
       socket.emit('leaveRoom', roomId);
     }
   });
@@ -236,8 +241,8 @@ if (!canvas) {
     drawBoard(board);
     if (isAIMode) {
       resetGameForAI();
-    } else {
-      joinRoom();
+    } else if (roomId) {
+      joinRoom(); // Gọi joinRoom tự động với roomId từ URL
     }
   };
 }

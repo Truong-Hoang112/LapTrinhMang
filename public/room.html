@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Chọn Phòng - Game Cờ Caro</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="game-header">
+    <div class="game-title">
+      <h1>Game Cờ Caro</h1>
+    </div>
+    <div class="user-info">
+      <span id="username"></span>
+      <button onclick="logout()" class="logout-btn">Đăng xuất</button>
+    </div>
+  </header>
+
+  <main class="game-container">
+    <div id="status" class="welcome-message">Chào <span id="welcome-user"></span>! Chọn hành động:</div>
+    <div class="mode-selection">
+      <h2>Chế độ Chơi với Người</h2>
+      <div class="mode-buttons">
+        <button onclick="createRoom()" class="mode-btn">Tạo Phòng</button>
+        <button onclick="joinRoom()" class="mode-btn">Vào Phòng</button>
+      </div>
+      <div id="joinRoomSection" style="display: none; margin-top: 20px;">
+        <input id="roomIdInput" placeholder="Nhập mã phòng" style="padding: 10px; width: 200px;">
+        <button onclick="confirmJoin()" style="margin-left: 10px;">Xác nhận</button>
+      </div>
+      <div id="roomCodeDisplay" style="margin-top: 10px; color: #333;"></div>
+    </div>
+  </main>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) {
+      window.location.href = '/login.html';
+    } else {
+      document.getElementById('username').textContent = `Xin chào, ${user.username}`;
+      document.getElementById('welcome-user').textContent = user.username;
+    }
+
+    function logout() {
+      localStorage.removeItem('user');
+      window.location.href = '/login.html';
+    }
+
+    function createRoom() {
+      const roomId = 'phong' + Math.floor(Math.random() * 1000);
+      document.getElementById('roomCodeDisplay').textContent = `Mã phòng của bạn: ${roomId}`;
+      document.getElementById('joinRoomSection').style.display = 'none';
+      window.location.href = `/index.html?mode=multiplayer&roomId=${roomId}`;
+    }
+
+    function joinRoom() {
+      document.getElementById('joinRoomSection').style.display = 'block';
+    }
+
+    function confirmJoin() {
+      const roomId = document.getElementById('roomIdInput').value;
+      if (roomId) {
+        window.location.href = `/index.html?mode=multiplayer&roomId=${roomId}`;
+      } else {
+        alert('Vui lòng nhập mã phòng!');
+      }
+    }
+  </script>
+</body>
+</html>
