@@ -30,6 +30,7 @@
       </div>
       <div id="roomCodeDisplay" style="margin-top: 10px; color: #333;"></div>
     </div>
+    <button onclick="goBackToHome()" class="mode-btn" style="margin-top: 20px;">Quay lại</button>
   </main>
 
   <script>
@@ -47,7 +48,7 @@
     }
 
     function createRoom() {
-      const roomId = 'phong' + Math.floor(Math.random() * 1000);
+      const roomId = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
       document.getElementById('roomCodeDisplay').textContent = `Mã phòng của bạn: ${roomId}`;
       document.getElementById('joinRoomSection').style.display = 'none';
       window.location.href = `/index.html?mode=multiplayer&roomId=${roomId}`;
@@ -64,6 +65,10 @@
       } else {
         alert('Vui lòng nhập mã phòng!');
       }
+    }
+
+    function goBackToHome() {
+      window.location.href = '/home.html';
     }
   </script>
 </body>

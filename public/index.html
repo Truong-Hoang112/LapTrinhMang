@@ -27,6 +27,7 @@
     <div id="roomCodeDisplay" style="margin-top: 10px; color: #333; display: none;"></div>
     <canvas id="board" width="600" height="600" style="border: 1px solid #000;"></canvas>
     <button id="reset">Chơi Lại</button>
+    <button onclick="goBackToHome()" class="mode-btn" style="margin-top: 10px;">Quay lại</button>
   </main>
 
   <script>
@@ -48,11 +49,11 @@
     const roomId = urlParams.get('roomId');
 
     if (!isAIMode && roomId) {
-      document.getElementById('roomControls').style.display = 'none'; // Ẩn thanh vào phòng
-      document.getElementById('roomCodeDisplay').style.display = 'block'; // Hiển thị mã phòng
+      document.getElementById('roomControls').style.display = 'none';
+      document.getElementById('roomCodeDisplay').style.display = 'block';
       document.getElementById('roomCodeDisplay').textContent = `Mã phòng: ${roomId}`;
     } else {
-      document.getElementById('roomControls').style.display = isAIMode ? 'none' : 'block'; // Hiển thị thanh vào phòng nếu chưa có roomId
+      document.getElementById('roomControls').style.display = isAIMode ? 'none' : 'block';
     }
 
     function joinRoom() {
@@ -64,6 +65,10 @@
           alert('Vui lòng nhập mã phòng!');
         }
       }
+    }
+
+    function goBackToHome() {
+      window.location.href = '/home.html';
     }
   </script>
   <script src="game.js"></script>
