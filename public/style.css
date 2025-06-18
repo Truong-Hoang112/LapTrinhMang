@@ -33,12 +33,6 @@ body {
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.game-title .subtitle {
-  margin: 5px 0 0;
-  font-size: 1em;
-  color: #333;
-}
-
 .user-info {
   display: flex;
   align-items: center;
@@ -74,18 +68,21 @@ body {
 
 /* Game Container Styles */
 .game-container {
-  margin-top: 80px; /* Tăng khoảng cách trên để tránh bị che bởi header */
+  margin-top: 80px;
   padding: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 40px;
+  gap: 20px;
   min-height: calc(90vh - 20px);
 }
 
 .content-wrapper {
   width: 100%;
   max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .welcome-message {
@@ -93,57 +90,131 @@ body {
   color: #333;
   text-align: center;
   margin-bottom: 10px;
-  padding-top: 10px; /* Thêm padding trên để đảm bảo hiển thị */
+  padding-top: 10px;
 }
 
-.game-preview {
-  display: none; /* Ẩn hoàn toàn game-preview và board-preview */
+/* Room Styles */
+.room-title {
+  color: #333;
+  font-size: 2em;
+  text-align: center;
+  margin-bottom: 20px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-.board-preview {
-  display: none; /* Ẩn board-preview */
-  width: 200px;
-  height: 200px;
-  background-color: #ecf0f1;
-  margin: 0 auto 30px auto;
-  display: grid;
-  grid-template-columns: repeat(15, 1fr);
-  border: 2px solid #333;
-  border-radius: 5px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  clear: both;
+.room-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 400px;
+  animation: fadeIn 0.5s ease;
+  margin: 0 auto;
 }
 
-.board-preview div {
-  border: 1px solid #bdc3c7;
+.room-btn {
+  padding: 12px 24px;
+  font-size: 18px;
+  cursor: pointer;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  width: 100%;
+  max-width: 300px;
+  text-align: center;
 }
 
-.board-preview div:nth-child(odd) {
-  background-color: #ffffff;
+.room-btn:hover {
+  background-color: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-.board-preview div:nth-child(even) {
-  background-color: #e0e0e0;
+.join-room {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 300px;
 }
 
-.board-preview div:nth-child(15n+1):nth-child(odd),
-.board-preview div:nth-child(15n+2):nth-child(even),
-.board-preview div:nth-child(15n+3):nth-child(odd),
-.board-preview div:nth-child(15n+4):nth-child(even),
-.board-preview div:nth-child(15n+5):nth-child(odd),
-.board-preview div:nth-child(15n+6):nth-child(even),
-.board-preview div:nth-child(15n+7):nth-child(odd),
-.board-preview div:nth-child(15n+8):nth-child(even),
-.board-preview div:nth-child(15n+9):nth-child(odd),
-.board-preview div:nth-child(15n+10):nth-child(even),
-.board-preview div:nth-child(15n+11):nth-child(odd),
-.board-preview div:nth-child(15n+12):nth-child(even),
-.board-preview div:nth-child(15n+13):nth-child(odd),
-.board-preview div:nth-child(15n+14):nth-child(even),
-.board-preview div:nth-child(15n+15):nth-child(odd) {
-  background-color: #ffffff;
+#roomIdInput {
+  padding: 12px;
+  font-size: 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.3s ease;
+  text-align: center;
 }
 
+#roomIdInput:focus {
+  border-color: #4CAF50;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+}
+
+.join-btn {
+  background-color: #2196F3;
+}
+
+.join-btn:hover {
+  background-color: #1976D2;
+}
+
+.room-id-display {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 300px;
+  animation: fadeIn 0.5s ease;
+}
+
+.room-id-display p {
+  margin: 0;
+  font-size: 16px;
+  color: #333;
+  text-align: center;
+}
+
+.room-code {
+  font-weight: bold;
+  color: #4CAF50;
+  background-color: #f0f0f0;
+  padding: 5px 10px;
+  border-radius: 4px;
+}
+
+.copy-btn {
+  background-color: #FF9800;
+}
+
+.copy-btn:hover {
+  background-color: #F57C00;
+}
+
+.back-btn {
+  background-color: #666;
+}
+
+.back-btn:hover {
+  background-color: #555;
+}
+
+/* Mode Selection Styles */
 .mode-selection {
   text-align: center;
   background-color: rgba(255, 255, 255, 0.95);
@@ -153,7 +224,6 @@ body {
   max-width: 600px;
   width: 90%;
   margin: 0 auto;
-  clear: both;
 }
 
 .mode-selection h2 {
@@ -163,23 +233,28 @@ body {
 
 .mode-buttons {
   display: flex;
-  justify-content: center;
-  gap: 20px;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
 }
 
 .mode-btn {
-  padding: 10px 20px;
-  font-size: 16px;
+  padding: 12px 24px;
+  font-size: 18px;
   cursor: pointer;
   background-color: #4CAF50;
   color: white;
   border: none;
-  border-radius: 5px;
-  transition: background-color 0.3s;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  width: 100%;
+  max-width: 300px;
 }
 
 .mode-btn:hover {
   background-color: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Canvas Styles */
@@ -188,6 +263,14 @@ canvas {
   border-radius: 8px;
   background-color: #fff;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Game Controls */
+.game-controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
 }
 
 /* Button Styles */
@@ -232,7 +315,6 @@ button:hover {
   display: flex;
   margin-bottom: 30px;
   border-bottom: 2px solid #e0e0e0;
-  position: relative;
 }
 
 .tab-btn {
@@ -245,14 +327,10 @@ button:hover {
   font-size: 16px;
   font-weight: 600;
   transition: all 0.3s ease;
-  position: relative;
 }
 
 .tab-btn:hover {
   color: #4CAF50;
-  background: none;
-  transform: none;
-  box-shadow: none;
 }
 
 .tab-btn.active {
@@ -349,10 +427,6 @@ form button:hover {
     font-size: 2em;
   }
 
-  .game-title .subtitle {
-    font-size: 0.9em;
-  }
-
   .user-info {
     gap: 10px;
     max-width: 60%;
@@ -363,18 +437,18 @@ form button:hover {
   }
 
   .game-container {
-    margin-top: 70px; /* Giảm khoảng cách trên cho thiết bị nhỏ */
+    margin-top: 70px;
     padding: 10px;
-    gap: 30px;
+    gap: 15px;
   }
 
   .content-wrapper {
     max-width: 90%;
   }
 
-  .mode-selection {
-    padding: 15px;
-    width: 95%;
+  .room-controls {
+    padding: 20px;
+    max-width: 350px;
   }
 
   canvas {
@@ -411,13 +485,13 @@ form button:hover {
     font-size: 14px;
   }
 
-  .mode-buttons {
-    flex-direction: column;
-    gap: 10px;
+  .room-btn {
+    font-size: 16px;
+    padding: 10px 20px;
   }
 
-  .mode-btn {
-    width: 100%;
+  .room-title {
+    font-size: 1.5em;
   }
 
   canvas {

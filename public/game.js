@@ -11,10 +11,12 @@ if (!canvas) {
   }
   const status = document.getElementById('status');
   const score = document.getElementById('score');
+  const timer = document.getElementById('timer');
   const urlParams = new URLSearchParams(window.location.search);
   const size = urlParams.get('size') || '15x15';
+  const mode = urlParams.get('mode') || 'normal';
   const [rows, cols] = size.split('x').map(Number);
-  const cellSize = canvas.width / cols; // Sử dụng giá trị từ canvas
+  const cellSize = canvas.width / cols;
   let mySymbol = 'X';
   let board = Array(rows).fill().map(() => Array(cols).fill(null));
   let roomId = '';
@@ -22,16 +24,14 @@ if (!canvas) {
   let aiTurn = false;
   let currentPlayer = 'X';
 
-  console.log(`Game initialized: rows=${rows}, cols=${cols}, cellSize=${cellSize}, canvas.width=${canvas.width}, canvas.height=${canvas.height}`);
+  console.log(`Game initialized: rows=${rows}, cols=${cols}, cellSize=${cellSize}, canvas.width=${canvas.width}, canvas.height=${canvas.height}, mode=${mode}`);
 
-  // Lấy tham số mode và roomId từ URL
   isAIMode = urlParams.get('mode') === 'ai';
   const urlRoomId = urlParams.get('roomId');
   if (!isAIMode && urlRoomId) {
     roomId = urlRoomId;
   }
 
-  // Hàm vẽ bàn cờ
   function drawBoard(board) {
     if (!ctx) {
       console.error('Canvas context is null or undefined!');
@@ -57,18 +57,20 @@ if (!canvas) {
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
         if (board[row][col] === 'X') {
-          ctx.fillStyle = 'red';
+          ctx.strokeStyle = 'red';
+          ctx.lineWidth = 4;
           ctx.beginPath();
-          const margin = cellSize * 0.1; // Khoảng cách 10% từ biên
+          const margin = cellSize * 0.1;
           ctx.moveTo(col * cellSize + margin, row * cellSize + margin);
           ctx.lineTo(col * cellSize + cellSize - margin, row * cellSize + cellSize - margin);
           ctx.moveTo(col * cellSize + cellSize - margin, row * cellSize + margin);
           ctx.lineTo(col * cellSize + margin, row * cellSize + cellSize - margin);
           ctx.stroke();
         } else if (board[row][col] === 'O') {
-          ctx.fillStyle = 'blue';
+          ctx.strokeStyle = 'blue';
+          ctx.lineWidth = 4;
           ctx.beginPath();
-          const radius = cellSize * 0.3; // Bán kính 30% của ô
+          const radius = cellSize * 0.3;
           ctx.arc(col * cellSize + cellSize / 2, row * cellSize + cellSize / 2, radius, 0, Math.PI * 2);
           ctx.stroke();
         }
@@ -76,16 +78,14 @@ if (!canvas) {
     }
   }
 
-  // Hàm kiểm tra chiến thắng với debug chi tiết
   function checkWin(row, col, player, board) {
-    const directions = [[0, 1], [1, 0], [1, 1], [1, -1]]; // Ngang, dọc, chéo chính, chéo phụ
-    const winLength = rows === 3 ? 3 : 5; // 3 cho 3x3, 5 cho 15x15
+    const directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
+    const winLength = rows === 3 ? 3 : 5;
     console.log(`Checking win at row=${row}, col=${col}, player=${player}, winLength=${winLength}, currentPlayer=${currentPlayer}`);
 
     for (let [dx, dy] of directions) {
       let count = 1;
       console.log(`Direction: dx=${dx}, dy=${dy}, starting at ${row},${col}`);
-      // Kiểm tra phía trước
       for (let i = 1; i < winLength; i++) {
         const newRow = row + i * dx;
         const newCol = col + i * dy;
@@ -97,7 +97,6 @@ if (!canvas) {
           break;
         }
       }
-      // Kiểm tra phía sau
       for (let i = 1; i < winLength; i++) {
         const newRow = row - i * dx;
         const newCol = col - i * dy;
@@ -118,17 +117,17 @@ if (!canvas) {
     return false;
   }
 
-  // Tham gia phòng
   function joinRoom() {
     if (!isAIMode && roomId) {
-      socket.emit('joinRoom', roomId);
+      const user = JSON.parse(localStorage.getItem('user'));
+      const username = user ? user.username : 'Khách';
+      socket.emit('joinRoom', roomId, size, username, mode);
       drawBoard(board);
     } else if (!isAIMode) {
       alert('Không có mã phòng để tham gia!');
     }
   }
 
-  // Xử lý click
   canvas.addEventListener('click', (e) => {
     const rect = canvas.getBoundingClientRect();
     const row = Math.floor((e.clientY - rect.top) / cellSize);
@@ -137,16 +136,19 @@ if (!canvas) {
 
     if (row >= 0 && row < rows && col >= 0 && col < cols) {
       if (isAIMode && !aiTurn && !board[row][col]) {
-        handleAIMove(row, col);
-      } else if (!isAIMode && socket.connected && roomId && !board[row][col]) {
+        handleAIMode(row, col);
+      } else if (!isAIMode && socket.connected && roomId && !board[row][col] && currentPlayer === mySymbol) {
         socket.emit('move', { roomId, row, col });
         console.log(`Sent move to server: row=${row}, col=${col}`);
       }
     }
   });
 
-  // Xử lý di chuyển trong chế độ AI
-  function handleAIMove(row, col) {
+  function handleAIMode(row, col) {
+    if (rows !== 15 || cols !== 15) {
+      console.error('AI mode only supports 15x15 board.');
+      return;
+    }
     if (row >= 0 && row < rows && col >= 0 && col < cols && !board[row][col] && !aiTurn) {
       board[row][col] = mySymbol;
       drawBoard(board);
@@ -162,7 +164,6 @@ if (!canvas) {
     }
   }
 
-  // AI di chuyển
   function aiMove() {
     if (!aiTurn) return;
 
@@ -208,8 +209,11 @@ if (!canvas) {
     aiTurn = false;
   }
 
-  // Reset game
   function resetGameForAI() {
+    if (rows !== 15 || cols !== 15) {
+      console.error('AI mode only supports 15x15 board.');
+      return;
+    }
     board = Array(rows).fill().map(() => Array(cols).fill(null));
     mySymbol = 'X';
     aiTurn = false;
@@ -218,12 +222,28 @@ if (!canvas) {
     status.textContent = 'Chế độ chơi với máy. Bạn đi trước!';
   }
 
-  // Nhận cập nhật từ server
-  socket.on('playerUpdate', (players) => {
+  socket.on('playerUpdate', ({ players, usernames, size, mode }) => {
     if (!isAIMode) {
       mySymbol = players[socket.id]?.symbol || 'X';
       currentPlayer = mySymbol;
-      status.textContent = `Bạn là ${mySymbol}. Số người chơi: ${Object.keys(players).length}/2`;
+      const playerCount = Object.keys(players).length;
+      const user = JSON.parse(localStorage.getItem('user'));
+      const myUsername = user ? user.username : 'Khách';
+      const opponentUsername = Object.values(usnames).find(u => u !== myUsername) || 'Chưa có đối thủ';
+      status.textContent = `Bạn là ${mySymbol} (${myUsername}). Đối thủ: ${opponentUsername}. Số người chơi: ${playerCount}/2`;
+      if (mode === 'timed' && playerCount === 2) {
+        timer.textContent = `Thời gian còn lại: 30s`;
+      }
+      drawBoard(board);
+    }
+  });
+
+  socket.on('opponentLeft', (message) => {
+    if (!isAIMode) {
+      status.textContent = message;
+      timer.textContent = '';
+      alert(message);
+      board = Array(rows).fill().map(() => Array(cols).fill(null));
       drawBoard(board);
     }
   });
@@ -233,25 +253,22 @@ if (!canvas) {
       board = newBoard.map(row => [...row]);
       drawBoard(board);
       currentPlayer = serverCurrentPlayer;
+      const user = JSON.parse(localStorage.getItem('user'));
+      const myUsername = user ? user.username : 'Khách';
       status.textContent = `Lượt của: ${currentPlayer === mySymbol ? 'Bạn' : 'Đối thủ'}`;
-      // Kiểm tra chiến thắng cho người chơi vừa đi
-      for (let row = 0; row < rows; row++) {
-        for (let col = 0; col < cols; col++) {
-          if (board[row][col] === currentPlayer) {
-            if (checkWin(row, col, currentPlayer, board)) {
-              status.textContent = `${currentPlayer === mySymbol ? 'Bạn' : 'Đối thủ'} thắng!`;
-              alert(`${currentPlayer === mySymbol ? 'Bạn' : 'Đối thủ'} thắng!`);
-              return;
-            }
-          }
-        }
-      }
+    }
+  });
+
+  socket.on('updateTimer', ({ timeLeft }) => {
+    if (!isAIMode && timer) {
+      timer.textContent = `Thời gian còn lại: ${timeLeft}s`;
     }
   });
 
   socket.on('gameOver', (message) => {
     if (!isAIMode) {
       status.textContent = message;
+      timer.textContent = '';
       alert(message);
     }
   });
@@ -259,12 +276,13 @@ if (!canvas) {
   socket.on('roomFull', (message) => {
     if (!isAIMode) {
       alert(message);
+      window.location.href = '/room.html';
     }
   });
 
   socket.on('updateScores', (scores) => {
     if (score) {
-      score.textContent = `Điểm của bạn: ${scores[mySymbol] || 0}`;
+      score.textContent = `Điểm của bạn: ${scores[socket.id] || 0}`;
     }
   });
 
@@ -280,7 +298,8 @@ if (!canvas) {
     if (!isAIMode) {
       board = Array(rows).fill().map(() => Array(cols).fill(null));
       drawBoard(board);
-      status.textContent = `Bạn là ${mySymbol}. Số người chơi: ${Object.keys(players).length}/2`;
+      timer.textContent = '';
+      status.textContent = `Bạn là ${mySymbol}. Chờ đối thủ...`;
     }
   });
 

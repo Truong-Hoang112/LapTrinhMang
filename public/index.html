@@ -24,10 +24,15 @@
       <input id="roomId" placeholder="Nhập mã phòng">
       <button onclick="joinRoom()">Vào Phòng</button>
     </div>
-    <div id="roomCodeDisplay" style="margin-top: 10px; color: #333; display: none;"></div>
+    <div id="roomCodeDisplay" style="margin-top: 10px; color: #333; display: none;">
+      Mã phòng: <span id="roomCode"></span>
+      <button onclick="copyRoomCode()" class="mode-btn" style="margin-left: 10px;">Sao chép</button>
+    </div>
     <canvas id="board" style="border: 1px solid #000;"></canvas>
-    <button id="reset">Chơi Lại</button>
-    <button onclick="goBackToHome()" class="mode-btn" style="margin-top: 10px;">Quay lại</button>
+    <div class="game-controls">
+      <button id="reset" class="mode-btn">Chơi Lại</button>
+      <button onclick="goBackToHome()" class="mode-btn">Quay lại</button>
+    </div>
   </main>
 
   <script>
@@ -49,7 +54,7 @@
     const roomId = urlParams.get('roomId');
     const size = urlParams.get('size') || '15x15';
     const [rows, cols] = size.split('x').map(Number);
-    const cellSize = size === '3x3' ? 80 : 40; // 80px cho 3x3, 40px cho 15x15
+    const cellSize = size === '3x3' ? 80 : 40;
     const canvasElement = document.getElementById('board');
     canvasElement.width = cols * cellSize;
     canvasElement.height = rows * cellSize;
@@ -58,7 +63,7 @@
     if (!isAIMode && roomId) {
       document.getElementById('roomControls').style.display = 'none';
       document.getElementById('roomCodeDisplay').style.display = 'block';
-      document.getElementById('roomCodeDisplay').textContent = `Mã phòng: ${roomId}`;
+      document.getElementById('roomCode').textContent = roomId;
     } else {
       document.getElementById('roomControls').style.display = isAIMode ? 'none' : 'block';
     }
@@ -72,6 +77,15 @@
           alert('Vui lòng nhập mã phòng!');
         }
       }
+    };
+
+    window.copyRoomCode = function() {
+      const roomCode = document.getElementById('roomCode').textContent;
+      navigator.clipboard.writeText(roomCode).then(() => {
+        alert('Đã sao chép mã phòng!');
+      }).catch(() => {
+        alert('Lỗi khi sao chép mã phòng!');
+      });
     };
 
     window.goBackToHome = function() {

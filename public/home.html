@@ -1,77 +1,58 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <title>Trang Chủ - Game Cờ Caro</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <title>Trang Chủ - Game Cờ Caro</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="game-header">
-    <div class="game-title">
-      <h1>Game Cờ Caro</h1>
-      <p class="subtitle">Thử tài chiến thuật của bạn ngay hôm nay!</p>
-    </div>
-    <div class="user-info">
-      <span id="username"></span>
-      <button onclick="logout()" class="logout-btn">Đăng xuất</button>
-    </div>
-  </header>
-
-  <main class="game-container">
-    <div class="content-wrapper">
-      <div id="status" class="welcome-message">Chào mừng <span id="welcome-user"></span> đến với Game Cờ Caro!</div>
-      <div class="game-preview">
-        <div class="board-preview"></div>
-      </div>
-      <div class="mode-selection">
-        <h2>Chọn kích thước bàn cờ:</h2>
-        <div class="mode-buttons" id="size-selection">
-          <button onclick="selectSize('3x3')" class="mode-btn">3x3</button>
-          <button onclick="selectSize('15x15')" class="mode-btn">15x15</button>
+    <header class="game-header">
+        <div class="game-title">
+            <h1>Game Cờ Caro</h1>
         </div>
-        <div id="mode-selection" style="display: none; margin-top: 20px;">
-          <h2>Chọn chế độ chơi:</h2>
-          <div class="mode-buttons">
-            <button onclick="startGame('multiplayer')" class="mode-btn">Chơi với Người</button>
-            <button onclick="startGame('ai')" class="mode-btn">Chơi với Máy</button>
-          </div>
+        <div class="user-info">
+            <span id="username"></span>
+            <button onclick="logout()" class="logout-btn">Đăng xuất</button>
         </div>
-      </div>
-    </div>
-  </main>
+    </header>
 
-  <script>
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (!user) {
-      window.location.href = '/login.html';
-    } else {
-      document.getElementById('username').textContent = `Xin chào, ${user.username}`;
-      document.getElementById('welcome-user').textContent = user.username;
-    }
+    <main class="game-container">
+        <div class="content-wrapper">
+            <div class="welcome-message" id="welcomeMessage"></div>
+            <div class="mode-selection">
+                <h2>Chọn chế độ chơi</h2>
+                <div class="mode-buttons">
+                    <button class="mode-btn" onclick="startAIMode('15x15')">Chơi với máy (15x15)</button>
+                    <button class="mode-btn" onclick="startMultiplayer('3x3')">Chơi với người (3x3)</button>
+                    <button class="mode-btn" onclick="startMultiplayer('15x15')">Chơi với người (15x15)</button>
+                    <button class="mode-btn" onclick="startMultiplayer('3x3', 'timed')">Chơi với người (3x3 - Thời gian giới hạn)</button>
+                    <button class="mode-btn" onclick="startMultiplayer('15x15', 'timed')">Chơi với người (15x15 - Thời gian giới hạn)</button>
+                </div>
+            </div>
+        </div>
+    </main>
 
-    function logout() {
-      localStorage.removeItem('user');
-      window.location.href = '/login.html';
-    }
+    <script>
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+            window.location.href = '/login.html';
+        } else {
+            document.getElementById('username').textContent = `Xin chào, ${user.username}`;
+            document.getElementById('welcomeMessage').textContent = `Chào mừng ${user.username} đến với Game Cờ Caro!`;
+        }
 
-    function selectSize(size) {
-      localStorage.setItem('boardSize', size);
-      document.getElementById('size-selection').style.display = 'none';
-      document.getElementById('mode-selection').style.display = 'block';
-    }
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = '/login.html';
+        }
 
-    function startGame(mode) {
-      const size = localStorage.getItem('boardSize');
-      if (mode === 'multiplayer') {
-        window.location.href = `/room.html?size=${size}`;
-      } else if (mode === 'ai') {
-        window.location.href = `/index.html?mode=ai&size=${size}`;
-      }
-    }
+        function startAIMode(size) {
+            window.location.href = `/index.html?mode=ai&size=${size}`;
+        }
 
-    function goBackToHome() {
-      window.location.href = '/home.html';
-    }
-  </script>
+        function startMultiplayer(size, mode = 'normal') {
+            window.location.href = `/room.html?size=${size}&mode=${mode}`;
+        }
+    </script>
 </body>
 </html>
