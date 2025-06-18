@@ -1,5 +1,5 @@
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
   padding: 0;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -26,7 +26,7 @@ body {
 .game-title h1 {
   margin: 0;
   font-size: 2.5em;
-  color: #4CAF50;
+  color: #4caf50;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -83,7 +83,7 @@ body {
 }
 
 #roomId:focus {
-  border-color: #4CAF50;
+  border-color: #4caf50;
   outline: none;
   box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
 }
@@ -108,7 +108,7 @@ button {
   padding: 8px 16px;
   margin: 5px;
   cursor: pointer;
-  background-color: #4CAF50;
+  background-color: #4caf50;
   color: white;
   border: none;
   border-radius: 4px;
@@ -162,15 +162,15 @@ button:hover {
 }
 
 .tab-btn:hover {
-  color: #4CAF50;
+  color: #4caf50;
   background: none;
   transform: none;
   box-shadow: none;
 }
 
 .tab-btn.active {
-  color: #4CAF50;
-  border-bottom: 3px solid #4CAF50;
+  color: #4caf50;
+  border-bottom: 3px solid #4caf50;
 }
 
 .tab-content {
@@ -205,7 +205,7 @@ button:hover {
 }
 
 .form-group input:focus {
-  border-color: #4CAF50;
+  border-color: #4caf50;
   outline: none;
   box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
 }
@@ -213,7 +213,7 @@ button:hover {
 form button {
   width: 100%;
   padding: 12px;
-  background-color: #4CAF50;
+  background-color: #4caf50;
   color: white;
   border: none;
   border-radius: 8px;
@@ -304,7 +304,7 @@ button {
   padding: 8px 16px;
   margin: 5px;
   cursor: pointer;
-  background-color: #4CAF50;
+  background-color: #4caf50;
   color: white;
   border: none;
   border-radius: 4px;
@@ -319,9 +319,9 @@ button:hover {
 
 /* Style cho nút Chơi với Máy */
 #toggleAI {
-  background-color: #2196F3;
+  background-color: #2196f3;
 }
 
 #toggleAI:hover {
-  background-color: #1976D2;
+  background-color: #1976d2;
 }
