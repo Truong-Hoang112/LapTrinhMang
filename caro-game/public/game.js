@@ -16,6 +16,7 @@ if (!canvas) {
   let roomId = "phong1";
   let isAIMode = false;
   let aiTurn = false;
+  let gameOver = false;
 
   // Hàm vẽ bàn cờ
   function drawBoard(board) {
@@ -110,6 +111,7 @@ if (!canvas) {
 
   // Xử lý click
   canvas.addEventListener("click", (e) => {
+  if (gameOver) return;
     if (isAIMode) {
       handleAIMove(e);
     } else if (!isAIMode && socket.connected) {
@@ -139,6 +141,7 @@ if (!canvas) {
       if (checkWin(row, col, mySymbol, board)) {
         status.textContent = "Bạn thắng!";
         alert("Bạn thắng!");
+        gameOver = true;
         return;
       }
       aiTurn = true;
@@ -173,6 +176,8 @@ function aiMove() {
     if (checkWin(bestRow, bestCol, 'O', board)) {
       status.textContent = 'Máy thắng!';
       alert('Máy thắng!');
+      gameOver = true;
+
     }
     aiTurn = false;
   }
@@ -220,6 +225,7 @@ function evaluateCell(row, col) {
       .map(() => Array(15).fill(null));
     mySymbol = "X";
     aiTurn = false;
+    gameOver = false;
     drawBoard(board);
     status.textContent = "Chế độ chơi với máy. Bạn đi trước!";
   }
@@ -262,6 +268,7 @@ function evaluateCell(row, col) {
     if (!isAIMode) {
       status.textContent = message;
       alert(message);
+      gameOver = true;
     }
   });
 
@@ -281,6 +288,7 @@ function evaluateCell(row, col) {
 
   socket.on("resetGame", () => {
     if (!isAIMode) {
+      gameOver = false; 
       board = Array(15)
         .fill()
         .map(() => Array(15).fill(null));
