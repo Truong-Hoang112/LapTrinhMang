@@ -147,27 +147,71 @@ if (!canvas) {
   }
 
   // AI di chuyển
-  function aiMove() {
-    if (!aiTurn) return;
+function aiMove() {
+  if (!aiTurn) return;
 
-    let found = false;
-    while (!found) {
-      const row = Math.floor(Math.random() * 15);
-      const col = Math.floor(Math.random() * 15);
+  let bestRow = -1;
+  let bestCol = -1;
+  let maxScore = -Infinity;
+
+  for (let row = 0; row < 15; row++) {
+    for (let col = 0; col < 15; col++) {
       if (!board[row][col]) {
-        board[row][col] = "O";
-        drawBoard(board);
-        if (checkWin(row, col, "O", board)) {
-          status.textContent = "Máy thắng!";
-          alert("Máy thắng!");
-          aiTurn = false;
-          return;
+        let score = evaluateCell(row, col);
+        if (score > maxScore) {
+          maxScore = score;
+          bestRow = row;
+          bestCol = col;
         }
-        aiTurn = false;
-        found = true;
       }
     }
   }
+
+  if (bestRow !== -1 && bestCol !== -1) {
+    board[bestRow][bestCol] = 'O';
+    drawBoard(board);
+    if (checkWin(bestRow, bestCol, 'O', board)) {
+      status.textContent = 'Máy thắng!';
+      alert('Máy thắng!');
+    }
+    aiTurn = false;
+  }
+}
+
+function evaluateCell(row, col) {
+  const directions = [
+    [0, 1], [1, 0], [1, 1], [1, -1]
+  ];
+  
+  let score = 0;
+
+  for (let [dx, dy] of directions) {
+    let playerCount = 0;
+    let aiCount = 0;
+
+    for (let i = -4; i <= 4; i++) {
+      if (i === 0) continue;
+      const r = row + i * dx;
+      const c = col + i * dy;
+      if (r >= 0 && r < 15 && c >= 0 && c < 15) {
+        if (board[r][c] === 'X') playerCount++;
+        if (board[r][c] === 'O') aiCount++;
+      }
+    }
+
+    // Ưu tiên chặn người chơi (quan trọng nhất)
+    if (playerCount >= 4) score += 1000; // người sắp thắng => chặn gấp
+    else if (playerCount === 3) score += 300;
+    else if (playerCount === 2) score += 50;
+
+    // Tự xây dựng chiến thắng (ít ưu tiên hơn)
+    if (aiCount >= 4) score += 500;
+    else if (aiCount === 3) score += 200;
+    else if (aiCount === 2) score += 30;
+  }
+
+  return score;
+}
 
   // Reset game
   function resetGameForAI() {
