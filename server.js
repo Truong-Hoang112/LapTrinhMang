@@ -15,11 +15,11 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-app.get('/index.html', (req, res, next) => {
+app.get('/home.html', (req, res, next) => {
   if (req.headers['sec-websocket-protocol']) {
     return next();
   }
-  res.redirect('/home.html');
+  res.sendFile(path.join(__dirname, 'public', 'home.html'));
 });
 
 let users = {};
@@ -281,13 +281,6 @@ io.on('connection', (socket) => {
       resetRoom(roomId);
     }
   });
-});
-
-app.get('/room.html', (req, res, next) => {
-  if (req.headers['sec-websocket-protocol']) {
-    return next();
-  }
-  res.sendFile(path.join(__dirname, 'public', 'room.html'));
 });
 
 setInterval(() => {

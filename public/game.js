@@ -14,9 +14,9 @@ if (!canvas) {
   const timer = document.getElementById('timer');
   const urlParams = new URLSearchParams(window.location.search);
   const size = urlParams.get('size') || '15x15';
-  const mode = urlParams.get('mode') || 'normal';
   const [rows, cols] = size.split('x').map(Number);
   const cellSize = canvas.width / cols;
+  const winLength = size === '3x3' ? 3 : 5;
   let mySymbol = 'X';
   let board = Array(rows).fill().map(() => Array(cols).fill(null));
   let roomId = '';
@@ -24,7 +24,7 @@ if (!canvas) {
   let aiTurn = false;
   let currentPlayer = 'X';
 
-  console.log(`Game initialized: rows=${rows}, cols=${cols}, cellSize=${cellSize}, canvas.width=${canvas.width}, canvas.height=${canvas.height}, mode=${mode}`);
+  console.log(`Game initialized: rows=${rows}, cols=${cols}, cellSize=${cellSize}, canvas.width=${canvas.width}, canvas.height=${canvas.height}, winLength=${winLength}`);
 
   isAIMode = urlParams.get('mode') === 'ai';
   const urlRoomId = urlParams.get('roomId');
@@ -80,7 +80,6 @@ if (!canvas) {
 
   function checkWin(row, col, player, board) {
     const directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
-    const winLength = rows === 3 ? 3 : 5;
     console.log(`Checking win at row=${row}, col=${col}, player=${player}, winLength=${winLength}, currentPlayer=${currentPlayer}`);
 
     for (let [dx, dy] of directions) {
@@ -121,7 +120,7 @@ if (!canvas) {
     if (!isAIMode && roomId) {
       const user = JSON.parse(localStorage.getItem('user'));
       const username = user ? user.username : 'Khách';
-      socket.emit('joinRoom', roomId, size, username, mode);
+      socket.emit('joinRoom', roomId, size, username, urlParams.get('mode') || 'normal');
       drawBoard(board);
     } else if (!isAIMode) {
       alert('Không có mã phòng để tham gia!');
@@ -145,10 +144,6 @@ if (!canvas) {
   });
 
   function handleAIMode(row, col) {
-    if (rows !== 15 || cols !== 15) {
-      console.error('AI mode only supports 15x15 board.');
-      return;
-    }
     if (row >= 0 && row < rows && col >= 0 && col < cols && !board[row][col] && !aiTurn) {
       board[row][col] = mySymbol;
       drawBoard(board);
@@ -210,10 +205,6 @@ if (!canvas) {
   }
 
   function resetGameForAI() {
-    if (rows !== 15 || cols !== 15) {
-      console.error('AI mode only supports 15x15 board.');
-      return;
-    }
     board = Array(rows).fill().map(() => Array(cols).fill(null));
     mySymbol = 'X';
     aiTurn = false;
@@ -229,7 +220,7 @@ if (!canvas) {
       const playerCount = Object.keys(players).length;
       const user = JSON.parse(localStorage.getItem('user'));
       const myUsername = user ? user.username : 'Khách';
-      const opponentUsername = Object.values(usnames).find(u => u !== myUsername) || 'Chưa có đối thủ';
+      const opponentUsername = Object.values(usernames).find(u => u !== myUsername) || 'Chưa có đối thủ';
       status.textContent = `Bạn là ${mySymbol} (${myUsername}). Đối thủ: ${opponentUsername}. Số người chơi: ${playerCount}/2`;
       if (mode === 'timed' && playerCount === 2) {
         timer.textContent = `Thời gian còn lại: 30s`;
@@ -245,6 +236,7 @@ if (!canvas) {
       alert(message);
       board = Array(rows).fill().map(() => Array(cols).fill(null));
       drawBoard(board);
+      window.location.href = `/home.html?mode=${urlParams.get('mode') || 'normal'}&size=${size}`;
     }
   });
 
@@ -276,7 +268,7 @@ if (!canvas) {
   socket.on('roomFull', (message) => {
     if (!isAIMode) {
       alert(message);
-      window.location.href = '/room.html';
+      window.location.href = `/home.html?mode=${urlParams.get('mode') || 'normal'}&size=${size}`;
     }
   });
 

@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Trang Chủ - Game Cờ Caro</title>
+    <title>Chọn Chế Độ Chơi - Game Cờ Caro</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -18,15 +18,35 @@
 
     <main class="game-container">
         <div class="content-wrapper">
-            <div class="welcome-message" id="welcomeMessage"></div>
-            <div class="mode-selection">
-                <h2>Chọn chế độ chơi</h2>
-                <div class="mode-buttons">
-                    <button class="mode-btn" onclick="startAIMode('15x15')">Chơi với máy (15x15)</button>
-                    <button class="mode-btn" onclick="startMultiplayer('3x3')">Chơi với người (3x3)</button>
-                    <button class="mode-btn" onclick="startMultiplayer('15x15')">Chơi với người (15x15)</button>
-                    <button class="mode-btn" onclick="startMultiplayer('3x3', 'timed')">Chơi với người (3x3 - Thời gian giới hạn)</button>
-                    <button class="mode-btn" onclick="startMultiplayer('15x15', 'timed')">Chơi với người (15x15 - Thời gian giới hạn)</button>
+            <h2 class="room-title">Chọn Chế Độ Chơi</h2>
+            <div class="room-controls">
+                <div class="mode-section">
+                    <button class="room-btn" id="toggleAI" onclick="startAIMode()">Chơi với máy</button>
+                    <select id="aiSize" class="multiplayer-options select">
+                        <option value="15x15">15x15</option>
+                    </select>
+                </div>
+                <div class="mode-section">
+                    <button class="room-btn" onclick="startMultiplayer('normal')">Chơi với người</button>
+                    <select id="normalSize" class="multiplayer-options select">
+                        <option value="3x3">3x3</option>
+                        <option value="15x15">15x15</option>
+                    </select>
+                </div>
+                <div class="mode-section">
+                    <button class="room-btn" onclick="startMultiplayer('timed')">Chế độ giới hạn thời gian</button>
+                    <select id="timedSize" class="multiplayer-options select">
+                        <option value="3x3">3x3</option>
+                        <option value="15x15">15x15</option>
+                    </select>
+                </div>
+                <div class="join-room">
+                    <input id="roomIdInput" type="text" placeholder="Nhập mã phòng để tham gia">
+                    <button class="room-btn join-btn" onclick="joinRoom()">Tham Gia Phòng</button>
+                </div>
+                <div id="roomIdDisplay" class="room-id-display">
+                    <p>Mã phòng của bạn: <span id="roomId" class="room-code"></span></p>
+                    <button class="room-btn copy-btn" onclick="copyRoomId()">Sao Chép Mã Phòng</button>
                 </div>
             </div>
         </div>
@@ -35,23 +55,46 @@
     <script>
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user) {
-            window.location.href = '/login.html';
+            window.location.href = '/';
         } else {
             document.getElementById('username').textContent = `Xin chào, ${user.username}`;
-            document.getElementById('welcomeMessage').textContent = `Chào mừng ${user.username} đến với Game Cờ Caro!`;
         }
 
         function logout() {
             localStorage.removeItem('user');
-            window.location.href = '/login.html';
+            window.location.href = '/';
         }
 
-        function startAIMode(size) {
+        function startAIMode() {
+            const size = document.getElementById('aiSize').value;
             window.location.href = `/index.html?mode=ai&size=${size}`;
         }
 
-        function startMultiplayer(size, mode = 'normal') {
-            window.location.href = `/room.html?size=${size}&mode=${mode}`;
+        function startMultiplayer(mode) {
+            const size = document.getElementById(`${mode}Size`).value;
+            const roomId = Math.random().toString(36).substring(2, 10);
+            document.getElementById('roomId').textContent = roomId;
+            document.getElementById('roomIdDisplay').style.display = 'flex';
+            window.location.href = `/index.html?roomId=${roomId}&size=${size}&mode=${mode}`;
+        }
+
+        function joinRoom() {
+            const roomId = document.getElementById('roomIdInput').value.trim();
+            if (roomId) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const size = urlParams.get('size') || '15x15';
+                const mode = urlParams.get('mode') || 'normal';
+                window.location.href = `/index.html?roomId=${roomId}&size=${size}&mode=${mode}`;
+            } else {
+                alert('Vui lòng nhập mã phòng!');
+            }
+        }
+
+        function copyRoomId() {
+            const roomId = document.getElementById('roomId').textContent;
+            navigator.clipboard.writeText(roomId).then(() => {
+                alert('Đã sao chép mã phòng!');
+            });
         }
     </script>
 </body>

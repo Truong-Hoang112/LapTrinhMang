@@ -54,16 +54,19 @@ body {
   color: white;
   border: none;
   padding: 8px 16px;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .logout-btn:hover {
   background-color: #ff0000;
   transform: translateY(-2px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Game Container Styles */
@@ -118,24 +121,60 @@ body {
   margin: 0 auto;
 }
 
+.mode-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  justify-content: center;
+}
+
 .room-btn {
   padding: 12px 24px;
   font-size: 18px;
   cursor: pointer;
-  background-color: #4CAF50;
   color: white;
   border: none;
   border-radius: 8px;
   transition: all 0.3s ease;
   width: 100%;
-  max-width: 300px;
+  max-width: 200px;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(90deg, #4CAF50, #66BB6A);
 }
 
 .room-btn:hover {
-  background-color: #45a049;
+  background: linear-gradient(90deg, #45a049, #5cb85c);
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.ai-btn, #toggleAI {
+  background: linear-gradient(90deg, #2196F3, #42A5F5);
+}
+
+.ai-btn:hover, #toggleAI:hover {
+  background: linear-gradient(90deg, #1976D2, #3b8ee6);
+}
+
+.multiplayer-btn {
+  background: linear-gradient(90deg, #AB47BC, #CE93D8);
+}
+
+.multiplayer-btn:hover {
+  background: linear-gradient(90deg, #9C27B0, #c174cc);
+}
+
+.timed-btn {
+  background: linear-gradient(90deg, #FF7043, #FF8A65);
+}
+
+.timed-btn:hover {
+  background: linear-gradient(90deg, #F4511E, #ff7752);
 }
 
 .join-room {
@@ -165,11 +204,11 @@ body {
 }
 
 .join-btn {
-  background-color: #2196F3;
+  background: linear-gradient(90deg, #2196F3, #42A5F5);
 }
 
 .join-btn:hover {
-  background-color: #1976D2;
+  background: linear-gradient(90deg, #1976D2, #3b8ee6);
 }
 
 .room-id-display {
@@ -199,62 +238,29 @@ body {
 }
 
 .copy-btn {
-  background-color: #FF9800;
+  background: linear-gradient(90deg, #FF9800, #FFB300);
 }
 
 .copy-btn:hover {
-  background-color: #F57C00;
+  background: linear-gradient(90deg, #F57C00, #ffa726);
 }
 
-.back-btn {
-  background-color: #666;
-}
-
-.back-btn:hover {
-  background-color: #555;
-}
-
-/* Mode Selection Styles */
-.mode-selection {
-  text-align: center;
-  background-color: rgba(255, 255, 255, 0.95);
-  padding: 20px;
-  border-radius: 15px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-  max-width: 600px;
-  width: 90%;
-  margin: 0 auto;
-}
-
-.mode-selection h2 {
-  color: #333;
-  margin-bottom: 20px;
-}
-
-.mode-buttons {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 15px;
-}
-
-.mode-btn {
-  padding: 12px 24px;
-  font-size: 18px;
-  cursor: pointer;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
+/* Dropdown Styles */
+.multiplayer-options.select {
+  padding: 12px;
+  font-size: 16px;
+  border: 2px solid #e0e0e0;
   border-radius: 8px;
-  transition: all 0.3s ease;
-  width: 100%;
-  max-width: 300px;
+  width: 100px;
+  background-color: #fff;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
 }
 
-.mode-btn:hover {
-  background-color: #45a049;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+.multiplayer-options.select:focus {
+  border-color: #4CAF50;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
 }
 
 /* Canvas Styles */
@@ -271,24 +277,6 @@ canvas {
   justify-content: center;
   gap: 10px;
   margin-top: 10px;
-}
-
-/* Button Styles */
-button {
-  padding: 8px 16px;
-  margin: 5px;
-  cursor: pointer;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  transition: all 0.3s ease;
-}
-
-button:hover {
-  background-color: #45a049;
-  transform: translateY(-2px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* Styles cho đăng nhập/đăng ký */
@@ -376,7 +364,7 @@ button:hover {
 }
 
 form button {
-  width: 100%;
+  width: 100;
   padding: 12px;
   background-color: #4CAF50;
   color: white;
@@ -451,6 +439,20 @@ form button:hover {
     max-width: 350px;
   }
 
+  .mode-section {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .room-btn {
+    max-width: 100%;
+  }
+
+  .multiplayer-options.select {
+    width: 100%;
+    max-width: 200px;
+  }
+
   canvas {
     width: 400px !important;
     height: 400px !important;
@@ -498,13 +500,4 @@ form button:hover {
     width: 300px !important;
     height: 300px !important;
   }
-}
-
-/* Style cho nút Chơi với Máy */
-#toggleAI {
-  background-color: #2196F3;
-}
-
-#toggleAI:hover {
-  background-color: #1976D2;
 }
