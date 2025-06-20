@@ -23,6 +23,8 @@ if (!canvas) {
   let isAIMode = false;
   let aiTurn = false;
   let currentPlayer = 'X';
+  let playerCount = 0; // Thêm biến đếm số người chơi
+  let isGameReady = false; // Thêm biến kiểm tra trạng thái sẵn sàng
 
   console.log(`Game initialized: rows=${rows}, cols=${cols}, cellSize=${cellSize}, canvas.width=${canvas.width}, canvas.height=${canvas.height}, winLength=${winLength}`);
 
@@ -127,21 +129,40 @@ if (!canvas) {
     }
   }
 
-  canvas.addEventListener('click', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const row = Math.floor((e.clientY - rect.top) / cellSize);
-    const col = Math.floor((e.clientX - rect.left) / cellSize);
-    console.log(`Click event: clientY=${e.clientY}, rect.top=${rect.top}, row=${row}, clientX=${e.clientX}, rect.left=${rect.left}, col=${col}, rows=${rows}, cols=${cols}`);
+  // Thêm hàm kiểm tra điều kiện đánh cờ
+  function canMakeMove() {
+    if (isAIMode) return !aiTurn;
+    return isGameReady && currentPlayer === mySymbol;
+  }
 
-    if (row >= 0 && row < rows && col >= 0 && col < cols) {
-      if (isAIMode && !aiTurn && !board[row][col]) {
-        handleAIMode(row, col);
-      } else if (!isAIMode && socket.connected && roomId && !board[row][col] && currentPlayer === mySymbol) {
-        socket.emit('move', { roomId, row, col });
-        console.log(`Sent move to server: row=${row}, col=${col}`);
+  // Bọc sự kiện click gốc để thêm kiểm tra
+  const originalOnClick = canvas.onclick;
+  canvas.onclick = function(e) {
+    if (!canMakeMove()) {
+      if (!isGameReady && !isAIMode) {
+        alert('Vui lòng chờ đủ 2 người chơi để bắt đầu!');
+      }
+      return;
+    }
+    
+    if (originalOnClick) {
+      originalOnClick.call(canvas, e);
+    } else {
+      const rect = canvas.getBoundingClientRect();
+      const row = Math.floor((e.clientY - rect.top) / cellSize);
+      const col = Math.floor((e.clientX - rect.left) / cellSize);
+      console.log(`Click event: clientY=${e.clientY}, rect.top=${rect.top}, row=${row}, clientX=${e.clientX}, rect.left=${rect.left}, col=${col}, rows=${rows}, cols=${cols}`);
+
+      if (row >= 0 && row < rows && col >= 0 && col < cols) {
+        if (isAIMode && !aiTurn && !board[row][col]) {
+          handleAIMode(row, col);
+        } else if (!isAIMode && socket.connected && roomId && !board[row][col] && currentPlayer === mySymbol) {
+          socket.emit('move', { roomId, row, col });
+          console.log(`Sent move to server: row=${row}, col=${col}`);
+        }
       }
     }
-  });
+  };
 
   function handleAIMode(row, col) {
     if (row >= 0 && row < rows && col >= 0 && col < cols && !board[row][col] && !aiTurn) {
@@ -217,7 +238,8 @@ if (!canvas) {
     if (!isAIMode) {
       mySymbol = players[socket.id]?.symbol || 'X';
       currentPlayer = mySymbol;
-      const playerCount = Object.keys(players).length;
+      playerCount = Object.keys(players).length;
+      isGameReady = playerCount >= 2; // Cập nhật trạng thái sẵn sàng
       const user = JSON.parse(localStorage.getItem('user'));
       const myUsername = user ? user.username : 'Khách';
       const opponentUsername = Object.values(usernames).find(u => u !== myUsername) || 'Chưa có đối thủ';
@@ -235,6 +257,7 @@ if (!canvas) {
       timer.textContent = '';
       alert(message);
       board = Array(rows).fill().map(() => Array(cols).fill(null));
+      isGameReady = false; // Đặt lại trạng thái sẵn sàng
       drawBoard(board);
       window.location.href = `/home.html?mode=${urlParams.get('mode') || 'normal'}&size=${size}`;
     }
@@ -289,6 +312,7 @@ if (!canvas) {
   socket.on('resetGame', () => {
     if (!isAIMode) {
       board = Array(rows).fill().map(() => Array(cols).fill(null));
+      isGameReady = false; // Đặt lại trạng thái sẵn sàng khi reset
       drawBoard(board);
       timer.textContent = '';
       status.textContent = `Bạn là ${mySymbol}. Chờ đối thủ...`;
