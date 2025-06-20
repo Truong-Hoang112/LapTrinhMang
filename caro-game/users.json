@@ -6,29 +6,5 @@
   "thien1": {
     "password": "$2b$10$xiXo60BLIJ8PV9bOSVxMy.x4YLzAHCF3iz8unr0hLGL6RMiz8SrVm",
     "score": 0
-  },
-  "hoang112az": {
-    "password": "$2b$10$fnF3ZF60vg/N9sgi3lWg6O4PZeNk.8TSSv5UyYLOrhmuFuCwvD.qm",
-    "score": 0
-  },
-  "admin01": {
-    "password": "$2b$10$2AUA8Cetoem8tU7k9iqv.ubrEwcSjWHMQu0M1ozIfS2x100147Ol6",
-    "score": 0
-  },
-  "admin02": {
-    "password": "$2b$10$R8UeaeH23KLF2W.JAQX6Euwni7Cx.7iYd6vOH7J72e4QMG79Z.YUe",
-    "score": 0
-  },
-  "admin": {
-    "password": "$2b$10$CvrdE32hWYhjyyDoHCid1uR.hDla7tsThC.WzXTgHv1tWm5JELF06",
-    "score": 0
-  },
-  "admin1": {
-    "password": "$2b$10$i60qYPdVFmslPDku.gC6M.VIBxLJRz9u7XxOZx.1ERFnedrmshVS6",
-    "score": 0
-  },
-  "admin2": {
-    "password": "$2b$10$P2Wg46v4a.CR6j4wxZa9A.Tg2B1onHte7uC6Nf6nyQXcgcLfxffHe",
-    "score": 0
   }
 }

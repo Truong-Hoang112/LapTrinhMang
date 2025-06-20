@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Phòng Chờ - Game Cờ Caro</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="game-header">
+        <div class="game-title">
+            <h1>Game Cờ Caro</h1>
+        </div>
+        <div class="user-info">
+            <span id="username"></span>
+            <button onclick="logout()" class="logout-btn">Đăng xuất</button>
+        </div>
+    </header>
+
+    <main class="game-container">
+        <div class="content-wrapper">
+            <h2 class="room-title">Phòng Chờ</h2>
+            <div class="room-controls">
+                <button class="room-btn" onclick="createRoom()">Tạo Phòng Mới</button>
+                <div class="join-room">
+                    <input id="roomIdInput" type="text" placeholder="Nhập mã phòng để tham gia">
+                    <button class="room-btn join-btn" onclick="joinRoom()">Tham Gia Phòng</button>
+                </div>
+                <div id="roomIdDisplay" class="room-id-display">
+                    <p>Mã phòng của bạn: <span id="roomId" class="room-code"></span></p>
+                    <button class="room-btn copy-btn" onclick="copyRoomId()">Sao Chép Mã Phòng</button>
+                </div>
+                <button class="room-btn back-btn" onclick="goBack()">Quay Lại Trang Chủ</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+            window.location.href = '/';
+        } else {
+            document.getElementById('username').textContent = `Xin chào, ${user.username}`;
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = '/';
+        }
+
+        function createRoom() {
+            const roomId = Math.random().toString(36).substring(2, 10);
+            const urlParams = new URLSearchParams(window.location.search);
+            const size = urlParams.get('size') || '15x15';
+            const mode = urlParams.get('mode') || 'normal';
+            document.getElementById('roomId').textContent = roomId;
+            document.getElementById('roomIdDisplay').style.display = 'flex';
+            window.location.href = `/index.html?roomId=${roomId}&size=${size}&mode=${mode}`;
+        }
+
+        function joinRoom() {
+            const roomId = document.getElementById('roomIdInput').value.trim();
+            if (roomId) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const size = urlParams.get('size') || '15x15';
+                const mode = urlParams.get('mode') || 'normal';
+                window.location.href = `/index.html?roomId=${roomId}&size=${size}&mode=${mode}`;
+            } else {
+                alert('Vui lòng nhập mã phòng!');
+            }
+        }
+
+        function copyRoomId() {
+            const roomId = document.getElementById('roomId').textContent;
+            navigator.clipboard.writeText(roomId).then(() => {
+                alert('Đã sao chép mã phòng!');
+            });
+        }
+
+        function goBack() {
+            window.location.href = '/home.html';
+        }
+    </script>
+</body>
+</html>

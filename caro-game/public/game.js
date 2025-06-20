@@ -1,147 +1,178 @@
 const socket = io();
-const canvas = document.getElementById("board");
+const canvas = document.getElementById('board');
 if (!canvas) {
-  console.error("Canvas element not found!");
+  console.error('Canvas element not found!');
+  alert('Không thể tải bàn cờ. Vui lòng làm mới trang.');
 } else {
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext('2d');
   if (!ctx) {
-    console.error("Failed to get 2D context!");
+    console.error('Failed to get 2D context!');
+    alert('Không thể khởi tạo bàn cờ. Vui lòng thử lại.');
   }
-  const status = document.getElementById("status");
-  const cellSize = 40;
-  let mySymbol = "X";
-  let board = Array(15)
-    .fill()
-    .map(() => Array(15).fill(null));
-  let roomId = "phong1";
+  const status = document.getElementById('status');
+  const score = document.getElementById('score');
+  const timer = document.getElementById('timer');
+  const urlParams = new URLSearchParams(window.location.search);
+  const size = urlParams.get('size') || '15x15';
+  const [rows, cols] = size.split('x').map(Number);
+  const cellSize = canvas.width / cols;
+  const winLength = size === '3x3' ? 3 : 5;
+  let mySymbol = 'X';
+  let board = Array(rows).fill().map(() => Array(cols).fill(null));
+  let roomId = '';
   let isAIMode = false;
   let aiTurn = false;
-  let gameOver = false;
+  let currentPlayer = 'X';
+  let playerCount = 0; // Thêm biến đếm số người chơi
+  let isGameReady = false; // Thêm biến kiểm tra trạng thái sẵn sàng
 
-  // Hàm vẽ bàn cờ
+  console.log(`Game initialized: rows=${rows}, cols=${cols}, cellSize=${cellSize}, canvas.width=${canvas.width}, canvas.height=${canvas.height}, winLength=${winLength}`);
+
+  isAIMode = urlParams.get('mode') === 'ai';
+  const urlRoomId = urlParams.get('roomId');
+  if (!isAIMode && urlRoomId) {
+    roomId = urlRoomId;
+  }
+
   function drawBoard(board) {
     if (!ctx) {
-      console.error("Canvas context is not available");
+      console.error('Canvas context is null or undefined!');
       return;
     }
-    console.log("Drawing board...");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    for (let i = 0; i <= 15; i++) {
+    for (let i = 0; i <= cols; i++) {
       ctx.beginPath();
       ctx.moveTo(i * cellSize, 0);
       ctx.lineTo(i * cellSize, canvas.height);
-      ctx.moveTo(0, i * cellSize);
-      ctx.lineTo(canvas.width, i * cellSize);
-      ctx.strokeStyle = "#333";
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 2;
       ctx.stroke();
     }
-    for (let row = 0; row < 15; row++) {
-      for (let col = 0; col < 15; col++) {
-        if (board[row][col] === "X") {
-          ctx.fillStyle = "red";
+    for (let i = 0; i <= rows; i++) {
+      ctx.beginPath();
+      ctx.moveTo(0, i * cellSize);
+      ctx.lineTo(canvas.width, i * cellSize);
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (board[row][col] === 'X') {
+          ctx.strokeStyle = 'red';
+          ctx.lineWidth = 4;
           ctx.beginPath();
-          ctx.moveTo(col * cellSize + 5, row * cellSize + 5);
-          ctx.lineTo(
-            col * cellSize + cellSize - 5,
-            row * cellSize + cellSize - 5
-          );
-          ctx.moveTo(col * cellSize + cellSize - 5, row * cellSize + 5);
-          ctx.lineTo(col * cellSize + 5, row * cellSize + cellSize - 5);
+          const margin = cellSize * 0.1;
+          ctx.moveTo(col * cellSize + margin, row * cellSize + margin);
+          ctx.lineTo(col * cellSize + cellSize - margin, row * cellSize + cellSize - margin);
+          ctx.moveTo(col * cellSize + cellSize - margin, row * cellSize + margin);
+          ctx.lineTo(col * cellSize + margin, row * cellSize + cellSize - margin);
           ctx.stroke();
-        } else if (board[row][col] === "O") {
-          ctx.fillStyle = "blue";
+        } else if (board[row][col] === 'O') {
+          ctx.strokeStyle = 'blue';
+          ctx.lineWidth = 4;
           ctx.beginPath();
-          ctx.arc(
-            col * cellSize + cellSize / 2,
-            row * cellSize + cellSize / 2,
-            15,
-            0,
-            Math.PI * 2
-          );
+          const radius = cellSize * 0.3;
+          ctx.arc(col * cellSize + cellSize / 2, row * cellSize + cellSize / 2, radius, 0, Math.PI * 2);
           ctx.stroke();
         }
       }
     }
   }
 
-  // Hàm kiểm tra chiến thắng
   function checkWin(row, col, player, board) {
-    const directions = [
-      [0, 1],
-      [1, 0],
-      [1, 1],
-      [1, -1],
-    ];
+    const directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
+    console.log(`Checking win at row=${row}, col=${col}, player=${player}, winLength=${winLength}, currentPlayer=${currentPlayer}`);
+
     for (let [dx, dy] of directions) {
       let count = 1;
-      for (let i = 1; i <= 4; i++) {
-        if (
-          row + i * dx < 15 &&
-          row + i * dx >= 0 &&
-          col + i * dy < 15 &&
-          col + i * dy >= 0 &&
-          board[row + i * dx][col + i * dy] === player
-        )
+      console.log(`Direction: dx=${dx}, dy=${dy}, starting at ${row},${col}`);
+      for (let i = 1; i < winLength; i++) {
+        const newRow = row + i * dx;
+        const newCol = col + i * dy;
+        if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols && board[newRow][newCol] === player) {
           count++;
-        else break;
+          console.log(`Found match at ${newRow},${newCol}, count=${count}`);
+        } else {
+          console.log(`Stopped at ${newRow},${newCol}, value=${board[newRow]?.[newCol] || 'out of bounds'}`);
+          break;
+        }
       }
-      for (let i = 1; i <= 4; i++) {
-        if (
-          row - i * dx < 15 &&
-          row - i * dx >= 0 &&
-          col - i * dy < 15 &&
-          col - i * dy >= 0 &&
-          board[row - i * dx][col - i * dy] === player
-        )
+      for (let i = 1; i < winLength; i++) {
+        const newRow = row - i * dx;
+        const newCol = col - i * dy;
+        if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols && board[newRow][newCol] === player) {
           count++;
-        else break;
+          console.log(`Found match at ${newRow},${newCol}, count=${count}`);
+        } else {
+          console.log(`Stopped at ${newRow},${newCol}, value=${board[newRow]?.[newCol] || 'out of bounds'}`);
+          break;
+        }
       }
-      if (count >= 5) return true;
+      if (count >= winLength) {
+        console.log(`Win detected with count=${count} in direction dx=${dx}, dy=${dy} for player=${player}`);
+        return true;
+      }
     }
+    console.log('No win detected.');
     return false;
   }
 
-  // Tham gia phòng
   function joinRoom() {
-    roomId = document.getElementById("roomId").value;
-    socket.emit("joinRoom", roomId);
-    drawBoard(board); // Vẽ bàn cờ khi tham gia phòng
+    if (!isAIMode && roomId) {
+      const user = JSON.parse(localStorage.getItem('user'));
+      const username = user ? user.username : 'Khách';
+      socket.emit('joinRoom', roomId, size, username, urlParams.get('mode') || 'normal');
+      drawBoard(board);
+    } else if (!isAIMode) {
+      alert('Không có mã phòng để tham gia!');
+    }
   }
 
-  // Xử lý click
-  canvas.addEventListener("click", (e) => {
-  if (gameOver) return;
-    if (isAIMode) {
-      handleAIMove(e);
-    } else if (!isAIMode && socket.connected) {
+  // Thêm hàm kiểm tra điều kiện đánh cờ
+  function canMakeMove() {
+    if (isAIMode) return !aiTurn;
+    return isGameReady && currentPlayer === mySymbol;
+  }
+
+  // Bọc sự kiện click gốc để thêm kiểm tra
+  const originalOnClick = canvas.onclick;
+  canvas.onclick = function(e) {
+    if (!canMakeMove()) {
+      if (!isGameReady && !isAIMode) {
+        alert('Vui lòng chờ đủ 2 người chơi để bắt đầu!');
+      }
+      return;
+    }
+    
+    if (originalOnClick) {
+      originalOnClick.call(canvas, e);
+    } else {
       const rect = canvas.getBoundingClientRect();
       const row = Math.floor((e.clientY - rect.top) / cellSize);
       const col = Math.floor((e.clientX - rect.left) / cellSize);
-      socket.emit("move", { roomId, row, col });
+      console.log(`Click event: clientY=${e.clientY}, rect.top=${rect.top}, row=${row}, clientX=${e.clientX}, rect.left=${rect.left}, col=${col}, rows=${rows}, cols=${cols}`);
+
+      if (row >= 0 && row < rows && col >= 0 && col < cols) {
+        if (isAIMode && !aiTurn && !board[row][col]) {
+          handleAIMode(row, col);
+        } else if (!isAIMode && socket.connected && roomId && !board[row][col] && currentPlayer === mySymbol) {
+          socket.emit('move', { roomId, row, col });
+          console.log(`Sent move to server: row=${row}, col=${col}`);
+        }
+      }
     }
-  });
+  };
 
-  // Xử lý di chuyển trong chế độ AI
-  function handleAIMove(e) {
-    const rect = canvas.getBoundingClientRect();
-    const row = Math.floor((e.clientY - rect.top) / cellSize);
-    const col = Math.floor((e.clientX - rect.left) / cellSize);
-
-    if (
-      row >= 0 &&
-      row < 15 &&
-      col >= 0 &&
-      col < 15 &&
-      !board[row][col] &&
-      !aiTurn
-    ) {
+  function handleAIMode(row, col) {
+    if (row >= 0 && row < rows && col >= 0 && col < cols && !board[row][col] && !aiTurn) {
       board[row][col] = mySymbol;
       drawBoard(board);
+      console.log(`Player move: row=${row}, col=${col}, board=`, board);
+      currentPlayer = mySymbol;
       if (checkWin(row, col, mySymbol, board)) {
-        status.textContent = "Bạn thắng!";
-        alert("Bạn thắng!");
-        gameOver = true;
+        status.textContent = 'Bạn thắng!';
+        alert('Bạn thắng!');
         return;
       }
       aiTurn = true;
@@ -149,160 +180,162 @@ if (!canvas) {
     }
   }
 
-  // AI di chuyển
-function aiMove() {
-  if (!aiTurn) return;
+  function aiMove() {
+    if (!aiTurn) return;
 
-  let bestRow = -1;
-  let bestCol = -1;
-  let maxScore = -Infinity;
+    let found = false;
+    let bestRow, bestCol;
 
-  for (let row = 0; row < 15; row++) {
-    for (let col = 0; col < 15; col++) {
-      if (!board[row][col]) {
-        let score = evaluateCell(row, col);
-        if (score > maxScore) {
-          maxScore = score;
-          bestRow = row;
-          bestCol = col;
+    for (let row = 0; row < rows && !found; row++) {
+      for (let col = 0; col < cols && !found; col++) {
+        if (!board[row][col]) {
+          board[row][col] = 'O';
+          if (checkWin(row, col, 'O', board)) {
+            bestRow = row;
+            bestCol = col;
+            found = true;
+          }
+          board[row][col] = null;
         }
       }
     }
-  }
 
-  if (bestRow !== -1 && bestCol !== -1) {
-    board[bestRow][bestCol] = 'O';
-    drawBoard(board);
-    if (checkWin(bestRow, bestCol, 'O', board)) {
-      status.textContent = 'Máy thắng!';
-      alert('Máy thắng!');
-      gameOver = true;
-
-    }
-    aiTurn = false;
-  }
-}
-
-function evaluateCell(row, col) {
-  const directions = [
-    [0, 1], [1, 0], [1, 1], [1, -1]
-  ];
-  
-  let score = 0;
-
-  for (let [dx, dy] of directions) {
-    let playerCount = 0;
-    let aiCount = 0;
-
-    for (let i = -4; i <= 4; i++) {
-      if (i === 0) continue;
-      const r = row + i * dx;
-      const c = col + i * dy;
-      if (r >= 0 && r < 15 && c >= 0 && c < 15) {
-        if (board[r][c] === 'X') playerCount++;
-        if (board[r][c] === 'O') aiCount++;
+    if (!found) {
+      while (!found) {
+        const row = Math.floor(Math.random() * rows);
+        const col = Math.floor(Math.random() * cols);
+        if (!board[row][col]) {
+          bestRow = row;
+          bestCol = col;
+          found = true;
+        }
       }
     }
 
-    // Ưu tiên chặn người chơi (quan trọng nhất)
-    if (playerCount >= 4) score += 1000; // người sắp thắng => chặn gấp
-    else if (playerCount === 3) score += 300;
-    else if (playerCount === 2) score += 50;
-
-    // Tự xây dựng chiến thắng (ít ưu tiên hơn)
-    if (aiCount >= 4) score += 500;
-    else if (aiCount === 3) score += 200;
-    else if (aiCount === 2) score += 30;
-  }
-
-  return score;
-}
-
-  // Reset game
-  function resetGameForAI() {
-    board = Array(15)
-      .fill()
-      .map(() => Array(15).fill(null));
-    mySymbol = "X";
-    aiTurn = false;
-    gameOver = false;
+    board[bestRow][bestCol] = 'O';
     drawBoard(board);
-    status.textContent = "Chế độ chơi với máy. Bạn đi trước!";
-  }
-
-  // Chuyển đổi chế độ
-  function toggleAIMode() {
-    isAIMode = !isAIMode;
-    document.getElementById("toggleAI").textContent = isAIMode
-      ? "Chuyển sang Chơi với Người"
-      : "Chơi với Máy";
-    if (isAIMode) {
-      socket.disconnect();
-      resetGameForAI();
-    } else {
-      socket.connect();
-      joinRoom();
+    console.log(`AI move: row=${bestRow}, col=${bestCol}, board=`, board);
+    currentPlayer = 'O';
+    if (checkWin(bestRow, bestCol, 'O', board)) {
+      status.textContent = 'Máy thắng!';
+      alert('Máy thắng!');
+      aiTurn = false;
+      return;
     }
+    aiTurn = false;
   }
 
-  // Nhận cập nhật từ server
-  socket.on("playerUpdate", (players) => {
+  function resetGameForAI() {
+    board = Array(rows).fill().map(() => Array(cols).fill(null));
+    mySymbol = 'X';
+    aiTurn = false;
+    currentPlayer = 'X';
+    drawBoard(board);
+    status.textContent = 'Chế độ chơi với máy. Bạn đi trước!';
+  }
+
+  socket.on('playerUpdate', ({ players, usernames, size, mode }) => {
     if (!isAIMode) {
-      mySymbol = players[socket.id]?.symbol || "X";
-      status.textContent = `Bạn là ${mySymbol}. Số người chơi: ${
-        Object.keys(players).length
-      }/2`;
+      mySymbol = players[socket.id]?.symbol || 'X';
+      currentPlayer = mySymbol;
+      playerCount = Object.keys(players).length;
+      isGameReady = playerCount >= 2; // Cập nhật trạng thái sẵn sàng
+      const user = JSON.parse(localStorage.getItem('user'));
+      const myUsername = user ? user.username : 'Khách';
+      const opponentUsername = Object.values(usernames).find(u => u !== myUsername) || 'Chưa có đối thủ';
+      status.textContent = `Bạn là ${mySymbol} (${myUsername}). Đối thủ: ${opponentUsername}. Số người chơi: ${playerCount}/2`;
+      if (mode === 'timed' && playerCount === 2) {
+        timer.textContent = `Thời gian còn lại: 30s`;
+      }
       drawBoard(board);
     }
   });
 
-  socket.on("updateBoard", ({ board: newBoard, currentPlayer }) => {
-    if (!isAIMode) {
-      board = newBoard;
-      drawBoard(board);
-      status.textContent = `Lượt của: ${currentPlayer}`;
-    }
-  });
-
-  socket.on("gameOver", (message) => {
+  socket.on('opponentLeft', (message) => {
     if (!isAIMode) {
       status.textContent = message;
+      timer.textContent = '';
       alert(message);
-      gameOver = true;
+      board = Array(rows).fill().map(() => Array(cols).fill(null));
+      isGameReady = false; // Đặt lại trạng thái sẵn sàng
+      drawBoard(board);
+      window.location.href = `/home.html?mode=${urlParams.get('mode') || 'normal'}&size=${size}`;
     }
   });
 
-  socket.on("roomFull", (message) => {
+  socket.on('updateBoard', ({ board: newBoard, currentPlayer: serverCurrentPlayer }) => {
+    if (!isAIMode) {
+      board = newBoard.map(row => [...row]);
+      drawBoard(board);
+      currentPlayer = serverCurrentPlayer;
+      const user = JSON.parse(localStorage.getItem('user'));
+      const myUsername = user ? user.username : 'Khách';
+      status.textContent = `Lượt của: ${currentPlayer === mySymbol ? 'Bạn' : 'Đối thủ'}`;
+    }
+  });
+
+  socket.on('updateTimer', ({ timeLeft }) => {
+    if (!isAIMode && timer) {
+      timer.textContent = `Thời gian còn lại: ${timeLeft}s`;
+    }
+  });
+
+  socket.on('gameOver', (message) => {
+    if (!isAIMode) {
+      status.textContent = message;
+      timer.textContent = '';
+      alert(message);
+    }
+  });
+
+  socket.on('roomFull', (message) => {
     if (!isAIMode) {
       alert(message);
+      window.location.href = `/home.html?mode=${urlParams.get('mode') || 'normal'}&size=${size}`;
     }
   });
 
-  document.getElementById("reset").addEventListener("click", () => {
+  socket.on('updateScores', (scores) => {
+    if (score) {
+      score.textContent = `Điểm của bạn: ${scores[socket.id] || 0}`;
+    }
+  });
+
+  document.getElementById('reset').addEventListener('click', () => {
     if (isAIMode) {
       resetGameForAI();
-    } else if (socket.connected) {
-      socket.emit("resetGame", roomId);
+    } else if (socket.connected && roomId) {
+      socket.emit('resetGame', roomId);
     }
   });
 
-  socket.on("resetGame", () => {
+  socket.on('resetGame', () => {
     if (!isAIMode) {
-      gameOver = false; 
-      board = Array(15)
-        .fill()
-        .map(() => Array(15).fill(null));
+      board = Array(rows).fill().map(() => Array(cols).fill(null));
+      isGameReady = false; // Đặt lại trạng thái sẵn sàng khi reset
       drawBoard(board);
-      status.textContent = `Bạn là ${mySymbol}. Số người chơi: ${
-        Object.keys(players).length
-      }/2`;
+      timer.textContent = '';
+      status.textContent = `Bạn là ${mySymbol}. Chờ đối thủ...`;
     }
   });
 
-  // Vẽ bàn cờ ban đầu khi trang
+  window.addEventListener('beforeunload', () => {
+    if (!isAIMode && socket.connected && roomId) {
+      socket.emit('leaveRoom', roomId);
+    }
+  });
+
   window.onload = () => {
-    drawBoard(board); // Vẽ bàn cờ ngay khi trang tải
-    if (!isAIMode) {
+    console.log('Window loaded, initializing game...');
+    if (ctx) {
+      drawBoard(board);
+      console.log('Board drawn successfully.');
+    } else {
+      console.error('Context is null after onload!');
+    }
+    if (isAIMode) {
+      resetGameForAI();
+    } else if (roomId) {
       joinRoom();
     }
   };

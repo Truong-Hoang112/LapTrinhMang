@@ -1,129 +1,54 @@
 <!DOCTYPE html>
 <html lang="vi">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Đăng nhập - Game Caro</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        margin: 0;
-        background-color: #f0f2f5;
-      }
-      .auth-container {
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        width: 300px;
-      }
-      .tabs {
-        display: flex;
-        margin-bottom: 20px;
-        border-bottom: 1px solid #ddd;
-      }
-      .tab-btn {
-        flex: 1;
-        padding: 10px;
-        border: none;
-        background: none;
-        cursor: pointer;
-        font-size: 16px;
-        color: #666;
-      }
-      .tab-btn.active {
-        color: #1877f2;
-        border-bottom: 2px solid #1877f2;
-      }
-      .tab-content {
-        display: none;
-      }
-      .tab-content.active {
-        display: block;
-      }
-      .form-group {
-        margin-bottom: 15px;
-      }
-      label {
-        display: block;
-        margin-bottom: 5px;
-        color: #333;
-      }
-      input {
-        width: 100%;
-        padding: 8px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        box-sizing: border-box;
-      }
-      button {
-        width: 100%;
-        padding: 10px;
-        background-color: #1877f2;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 16px;
-      }
-      button:hover {
-        background-color: #166fe5;
-      }
-      .error-message {
-        color: #dc3545;
-        margin-top: 10px;
-        text-align: center;
-        font-size: 14px;
-      }
-    </style>
-  </head>
-  <body>
+<head>
+    <meta charset="UTF-8">
+    <title>Đăng nhập - Game Cờ Caro</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body>
     <div class="auth-container">
-      <div class="tabs">
-        <button class="tab-btn active" onclick="showTab('login')">
-          Đăng nhập
-        </button>
-        <button class="tab-btn" onclick="showTab('register')">Đăng ký</button>
-      </div>
+        <div class="auth-box">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="showTab('login')">Đăng nhập</button>
+                <button class="tab-btn" onclick="showTab('register')">Đăng ký</button>
+            </div>
 
-      <div id="login" class="tab-content active">
-        <h2>Đăng nhập</h2>
-        <form id="loginForm" onsubmit="return handleLogin(event)">
-          <div class="form-group">
-            <label for="loginUsername">Tên đăng nhập:</label>
-            <input type="text" id="loginUsername" required />
-          </div>
-          <div class="form-group">
-            <label for="loginPassword">Mật khẩu:</label>
-            <input type="password" id="loginPassword" required />
-          </div>
-          <button type="submit">Đăng nhập</button>
-        </form>
-      </div>
+            <div id="login" class="tab-content active">
+                <h2>Đăng nhập</h2>
+                <form id="loginForm" onsubmit="return handleLogin(event)">
+                    <div class="form-group">
+                        <label for="loginUsername">Tên đăng nhập:</label>
+                        <input type="text" id="loginUsername" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Mật khẩu:</label>
+                        <input type="password" id="loginPassword" required>
+                    </div>
+                    <button type="submit">Đăng nhập</button>
+                </form>
+            </div>
 
-      <div id="register" class="tab-content">
-        <h2>Đăng ký</h2>
-        <form id="registerForm" onsubmit="return handleRegister(event)">
-          <div class="form-group">
-            <label for="registerUsername">Tên đăng nhập:</label>
-            <input type="text" id="registerUsername" required />
-          </div>
-          <div class="form-group">
-            <label for="registerPassword">Mật khẩu:</label>
-            <input type="password" id="registerPassword" required />
-          </div>
-          <div class="form-group">
-            <label for="confirmPassword">Xác nhận mật khẩu:</label>
-            <input type="password" id="confirmPassword" required />
-          </div>
-          <button type="submit">Đăng ký</button>
-        </form>
-      </div>
+            <div id="register" class="tab-content">
+                <h2>Đăng ký</h2>
+                <form id="registerForm" onsubmit="return handleRegister(event)">
+                    <div class="form-group">
+                        <label for="registerUsername">Tên đăng nhập:</label>
+                        <input type="text" id="registerUsername" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerPassword">Mật khẩu:</label>
+                        <input type="password" id="registerPassword" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Xác nhận mật khẩu:</label>
+                        <input type="password" id="confirmPassword" required>
+                    </div>
+                    <button type="submit">Đăng ký</button>
+                </form>
+            </div>
+        </div>
     </div>
     <script src="auth.js"></script>
-  </body>
+</body>
 </html>
