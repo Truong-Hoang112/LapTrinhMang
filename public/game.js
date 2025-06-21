@@ -1,318 +1,141 @@
 const socket = io();
 const canvas = document.getElementById('board');
+
 if (!canvas) {
-  console.error('Canvas element not found!');
-  alert('Không thể tải bàn cờ. Vui lòng làm mới trang.');
+    alert('Lỗi nghiêm trọng: Không tìm thấy element #board!');
 } else {
-  const ctx = canvas.getContext('2d');
-  if (!ctx) {
-    console.error('Failed to get 2D context!');
-    alert('Không thể khởi tạo bàn cờ. Vui lòng thử lại.');
-  }
-  const status = document.getElementById('status');
-  const score = document.getElementById('score');
-  const timer = document.getElementById('timer');
-  const urlParams = new URLSearchParams(window.location.search);
-  const size = urlParams.get('size') || '15x15';
-  const [rows, cols] = size.split('x').map(Number);
-  const cellSize = canvas.width / cols;
-  const winLength = size === '3x3' ? 3 : 5;
-  let mySymbol = 'X';
-  let board = Array(rows).fill().map(() => Array(cols).fill(null));
-  let roomId = '';
-  let isAIMode = false;
-  let aiTurn = false;
-  let currentPlayer = 'X';
+    const ctx = canvas.getContext('2d');
+    const statusEl = document.getElementById('status');
+    const timerEl = document.getElementById('timer');
+    const rematchBtn = document.getElementById('rematchBtn');
+    const surrenderBtn = document.getElementById('surrenderBtn');
+    const offerDrawBtn = document.getElementById('offerDrawBtn');
+    const undoBtn = document.getElementById('undoBtn');
 
-  console.log(`Game initialized: rows=${rows}, cols=${cols}, cellSize=${cellSize}, canvas.width=${canvas.width}, canvas.height=${canvas.height}, winLength=${winLength}`);
+    let board = [], rows, cols, cellSize, winLength, mySymbol = '', currentPlayer = '', isGameReady = false;
 
-  isAIMode = urlParams.get('mode') === 'ai';
-  const urlRoomId = urlParams.get('roomId');
-  if (!isAIMode && urlRoomId) {
-    roomId = urlRoomId;
-  }
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomId = urlParams.get('roomId');
+    const requestedSize = urlParams.get('size');
+    const requestedMode = urlParams.get('mode');
 
-  function drawBoard(board) {
-    if (!ctx) {
-      console.error('Canvas context is null or undefined!');
-      return;
+    function initializeBoard(sizeStr) {
+        if (!sizeStr) return;
+        [rows, cols] = sizeStr.split('x').map(Number);
+        winLength = sizeStr === '3x3' ? 3 : 5;
+        cellSize = 600 / cols;
+        canvas.width = 600;
+        canvas.height = (rows / cols) * 600;
+        drawGrid();
     }
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    for (let i = 0; i <= cols; i++) {
-      ctx.beginPath();
-      ctx.moveTo(i * cellSize, 0);
-      ctx.lineTo(i * cellSize, canvas.height);
-      ctx.strokeStyle = '#333';
-      ctx.lineWidth = 2;
-      ctx.stroke();
+    function drawGrid() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 1;
+        for (let i = 0; i <= cols; i++) { ctx.beginPath(); ctx.moveTo(i * cellSize, 0); ctx.lineTo(i * cellSize, canvas.height); ctx.stroke(); }
+        for (let i = 0; i <= rows; i++) { ctx.beginPath(); ctx.moveTo(0, i * cellSize); ctx.lineTo(canvas.width, i * cellSize); ctx.stroke(); }
     }
-    for (let i = 0; i <= rows; i++) {
-      ctx.beginPath();
-      ctx.moveTo(0, i * cellSize);
-      ctx.lineTo(canvas.width, i * cellSize);
-      ctx.strokeStyle = '#333';
-      ctx.lineWidth = 2;
-      ctx.stroke();
+    function drawPieces() {
+        if (!board) return;
+        ctx.lineWidth = 4;
+        for (let r = 0; r < rows; r++) { for (let c = 0; c < cols; c++) { const p = board[r][c]; if (!p) continue; const cx = c * cellSize + cellSize / 2, cy = r * cellSize + cellSize / 2; ctx.beginPath(); if (p === 'X') { ctx.strokeStyle = 'red'; const m = cellSize * 0.15; ctx.moveTo(cx - m, cy - m); ctx.lineTo(cx + m, cy + m); ctx.moveTo(cx + m, cy - m); ctx.lineTo(cx - m, cy + m); } else { ctx.strokeStyle = 'blue'; ctx.arc(cx, cy, cellSize * 0.35, 0, Math.PI * 2); } ctx.stroke(); } }
     }
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < cols; col++) {
-        if (board[row][col] === 'X') {
-          ctx.strokeStyle = 'red';
-          ctx.lineWidth = 4;
-          ctx.beginPath();
-          const margin = cellSize * 0.1;
-          ctx.moveTo(col * cellSize + margin, row * cellSize + margin);
-          ctx.lineTo(col * cellSize + cellSize - margin, row * cellSize + cellSize - margin);
-          ctx.moveTo(col * cellSize + cellSize - margin, row * cellSize + margin);
-          ctx.lineTo(col * cellSize + margin, row * cellSize + cellSize - margin);
-          ctx.stroke();
-        } else if (board[row][col] === 'O') {
-          ctx.strokeStyle = 'blue';
-          ctx.lineWidth = 4;
-          ctx.beginPath();
-          const radius = cellSize * 0.3;
-          ctx.arc(col * cellSize + cellSize / 2, row * cellSize + cellSize / 2, radius, 0, Math.PI * 2);
-          ctx.stroke();
-        }
-      }
-    }
-  }
 
-  function checkWin(row, col, player, board) {
-    const directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
-    console.log(`Checking win at row=${row}, col=${col}, player=${player}, winLength=${winLength}, currentPlayer=${currentPlayer}`);
-
-    for (let [dx, dy] of directions) {
-      let count = 1;
-      console.log(`Direction: dx=${dx}, dy=${dy}, starting at ${row},${col}`);
-      for (let i = 1; i < winLength; i++) {
-        const newRow = row + i * dx;
-        const newCol = col + i * dy;
-        if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols && board[newRow][newCol] === player) {
-          count++;
-          console.log(`Found match at ${newRow},${newCol}, count=${count}`);
+    // --- XỬ LÝ SỰ KIỆN TỪ SERVER ---
+    socket.on('playerUpdate', (data) => {
+        isGameReady = Object.keys(data.players).length === 2;
+        [surrenderBtn, offerDrawBtn, undoBtn].forEach(btn => btn.disabled = !isGameReady);
+        if(rematchBtn) rematchBtn.style.display = 'none';
+        
+        initializeBoard(data.size);
+        board = data.board;
+        currentPlayer = data.currentPlayer;
+        mySymbol = data.players[socket.id]?.symbol || '';
+        drawPieces();
+        const turnText = (currentPlayer === mySymbol) ? 'Lượt của BẠN' : 'Lượt của đối thủ';
+        statusEl.textContent = !isGameReady ? `Phòng: ${roomId}. Chờ đối thủ...` : `Bạn là quân ${mySymbol}. ${turnText}.`;
+    });
+    socket.on('updateBoard', (data) => {
+        board = data.board;
+        currentPlayer = data.currentPlayer;
+        drawGrid();
+        drawPieces();
+        const turnText = (currentPlayer === mySymbol) ? 'Lượt của BẠN' : 'Lượt của đối thủ';
+        statusEl.textContent = `Bạn là quân ${mySymbol}. ${turnText}.`;
+    });
+    socket.on('gameOver', (message) => {
+        isGameReady = false;
+        alert(message);
+        if (rematchBtn) { rematchBtn.style.display = 'block'; rematchBtn.disabled = false; rematchBtn.textContent = 'Chơi Lại'; }
+        [surrenderBtn, offerDrawBtn, undoBtn].forEach(btn => btn.disabled = true);
+    });
+    socket.on('drawOffered', (message) => {
+        if (confirm(message + '\nBạn có đồng ý không?')) {
+            socket.emit('respondToDraw', { roomId, accepted: true });
         } else {
-          console.log(`Stopped at ${newRow},${newCol}, value=${board[newRow]?.[newCol] || 'out of bounds'}`);
-          break;
+            socket.emit('respondToDraw', { roomId, accepted: false });
         }
-      }
-      for (let i = 1; i < winLength; i++) {
-        const newRow = row - i * dx;
-        const newCol = col - i * dy;
-        if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols && board[newRow][newCol] === player) {
-          count++;
-          console.log(`Found match at ${newRow},${newCol}, count=${count}`);
+    });
+    socket.on('drawResponse', (message) => { alert(message); });
+    socket.on('undoRequested', (message) => {
+        if (confirm(message + '\nBạn có đồng ý không?')) {
+            socket.emit('respondToUndo', { roomId, accepted: true });
         } else {
-          console.log(`Stopped at ${newRow},${newCol}, value=${board[newRow]?.[newCol] || 'out of bounds'}`);
-          break;
+            socket.emit('respondToUndo', { roomId, accepted: false });
         }
-      }
-      if (count >= winLength) {
-        console.log(`Win detected with count=${count} in direction dx=${dx}, dy=${dy} for player=${player}`);
-        return true;
-      }
-    }
-    console.log('No win detected.');
-    return false;
-  }
-
-  function joinRoom() {
-    if (!isAIMode && roomId) {
-      const user = JSON.parse(localStorage.getItem('user'));
-      const username = user ? user.username : 'Khách';
-      socket.emit('joinRoom', roomId, size, username, urlParams.get('mode') || 'normal');
-      drawBoard(board);
-    } else if (!isAIMode) {
-      alert('Không có mã phòng để tham gia!');
-    }
-  }
-
-  canvas.addEventListener('click', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const row = Math.floor((e.clientY - rect.top) / cellSize);
-    const col = Math.floor((e.clientX - rect.left) / cellSize);
-    console.log(`Click event: clientY=${e.clientY}, rect.top=${rect.top}, row=${row}, clientX=${e.clientX}, rect.left=${rect.left}, col=${col}, rows=${rows}, cols=${cols}`);
-
-    if (row >= 0 && row < rows && col >= 0 && col < cols) {
-      if (isAIMode && !aiTurn && !board[row][col]) {
-        handleAIMode(row, col);
-      } else if (!isAIMode && socket.connected && roomId && !board[row][col] && currentPlayer === mySymbol) {
-        socket.emit('move', { roomId, row, col });
-        console.log(`Sent move to server: row=${row}, col=${col}`);
-      }
-    }
-  });
-
-  function handleAIMode(row, col) {
-    if (row >= 0 && row < rows && col >= 0 && col < cols && !board[row][col] && !aiTurn) {
-      board[row][col] = mySymbol;
-      drawBoard(board);
-      console.log(`Player move: row=${row}, col=${col}, board=`, board);
-      currentPlayer = mySymbol;
-      if (checkWin(row, col, mySymbol, board)) {
-        status.textContent = 'Bạn thắng!';
-        alert('Bạn thắng!');
-        return;
-      }
-      aiTurn = true;
-      setTimeout(aiMove, 500);
-    }
-  }
-
-  function aiMove() {
-    if (!aiTurn) return;
-
-    let found = false;
-    let bestRow, bestCol;
-
-    for (let row = 0; row < rows && !found; row++) {
-      for (let col = 0; col < cols && !found; col++) {
-        if (!board[row][col]) {
-          board[row][col] = 'O';
-          if (checkWin(row, col, 'O', board)) {
-            bestRow = row;
-            bestCol = col;
-            found = true;
-          }
-          board[row][col] = null;
+    });
+    socket.on('undoResponse', (message) => { alert(message); });
+    socket.on('opponentWantsRematch', () => {
+        alert('Đối thủ muốn chơi lại!');
+        statusEl.textContent = 'Đối thủ muốn chơi lại! Nhấn "Chơi Lại" để bắt đầu.';
+    });
+    
+    // --- TƯƠNG TÁC NGƯỜI DÙNG ---
+    canvas.addEventListener('click', (e) => {
+        if (!isGameReady || currentPlayer !== mySymbol) return;
+        const rect = canvas.getBoundingClientRect();
+        const row = Math.floor((e.clientY - rect.top) / cellSize);
+        const col = Math.floor((e.clientX - rect.left) / cellSize);
+        if (row >= 0 && row < rows && col >= 0 && col < cols && !board[row][col]) {
+            socket.emit('move', { roomId, row, col });
         }
-      }
+    });
+    if (rematchBtn) {
+        rematchBtn.addEventListener('click', () => {
+            socket.emit('requestRematch', roomId);
+            rematchBtn.disabled = true;
+            rematchBtn.textContent = 'Đang chờ...';
+        });
+    }
+    if (surrenderBtn) {
+        surrenderBtn.addEventListener('click', () => {
+            if (confirm('Bạn có chắc muốn đầu hàng?')) {
+                socket.emit('surrender', roomId);
+            }
+        });
+    }
+    if (offerDrawBtn) {
+        offerDrawBtn.addEventListener('click', () => {
+            offerDrawBtn.disabled = true;
+            setTimeout(() => { if(isGameReady) offerDrawBtn.disabled = false; }, 5000); // Mở lại sau 5s nếu game còn chạy
+            socket.emit('offerDraw', roomId);
+            alert('Đã gửi lời cầu hòa.');
+        });
+    }
+    if (undoBtn) {
+        undoBtn.addEventListener('click', () => {
+            undoBtn.disabled = true;
+            setTimeout(() => { if(isGameReady) undoBtn.disabled = false; }, 5000); // Mở lại sau 5s nếu game còn chạy
+            socket.emit('requestUndo', roomId);
+        });
     }
 
-    if (!found) {
-      while (!found) {
-        const row = Math.floor(Math.random() * rows);
-        const col = Math.floor(Math.random() * cols);
-        if (!board[row][col]) {
-          bestRow = row;
-          bestCol = col;
-          found = true;
-        }
-      }
-    }
-
-    board[bestRow][bestCol] = 'O';
-    drawBoard(board);
-    console.log(`AI move: row=${bestRow}, col=${bestCol}, board=`, board);
-    currentPlayer = 'O';
-    if (checkWin(bestRow, bestCol, 'O', board)) {
-      status.textContent = 'Máy thắng!';
-      alert('Máy thắng!');
-      aiTurn = false;
-      return;
-    }
-    aiTurn = false;
-  }
-
-  function resetGameForAI() {
-    board = Array(rows).fill().map(() => Array(cols).fill(null));
-    mySymbol = 'X';
-    aiTurn = false;
-    currentPlayer = 'X';
-    drawBoard(board);
-    status.textContent = 'Chế độ chơi với máy. Bạn đi trước!';
-  }
-
-  socket.on('playerUpdate', ({ players, usernames, size, mode }) => {
-    if (!isAIMode) {
-      mySymbol = players[socket.id]?.symbol || 'X';
-      currentPlayer = mySymbol;
-      const playerCount = Object.keys(players).length;
-      const user = JSON.parse(localStorage.getItem('user'));
-      const myUsername = user ? user.username : 'Khách';
-      const opponentUsername = Object.values(usernames).find(u => u !== myUsername) || 'Chưa có đối thủ';
-      status.textContent = `Bạn là ${mySymbol} (${myUsername}). Đối thủ: ${opponentUsername}. Số người chơi: ${playerCount}/2`;
-      if (mode === 'timed' && playerCount === 2) {
-        timer.textContent = `Thời gian còn lại: 30s`;
-      }
-      drawBoard(board);
-    }
-  });
-
-  socket.on('opponentLeft', (message) => {
-    if (!isAIMode) {
-      status.textContent = message;
-      timer.textContent = '';
-      alert(message);
-      board = Array(rows).fill().map(() => Array(cols).fill(null));
-      drawBoard(board);
-      window.location.href = `/home.html?mode=${urlParams.get('mode') || 'normal'}&size=${size}`;
-    }
-  });
-
-  socket.on('updateBoard', ({ board: newBoard, currentPlayer: serverCurrentPlayer }) => {
-    if (!isAIMode) {
-      board = newBoard.map(row => [...row]);
-      drawBoard(board);
-      currentPlayer = serverCurrentPlayer;
-      const user = JSON.parse(localStorage.getItem('user'));
-      const myUsername = user ? user.username : 'Khách';
-      status.textContent = `Lượt của: ${currentPlayer === mySymbol ? 'Bạn' : 'Đối thủ'}`;
-    }
-  });
-
-  socket.on('updateTimer', ({ timeLeft }) => {
-    if (!isAIMode && timer) {
-      timer.textContent = `Thời gian còn lại: ${timeLeft}s`;
-    }
-  });
-
-  socket.on('gameOver', (message) => {
-    if (!isAIMode) {
-      status.textContent = message;
-      timer.textContent = '';
-      alert(message);
-    }
-  });
-
-  socket.on('roomFull', (message) => {
-    if (!isAIMode) {
-      alert(message);
-      window.location.href = `/home.html?mode=${urlParams.get('mode') || 'normal'}&size=${size}`;
-    }
-  });
-
-  socket.on('updateScores', (scores) => {
-    if (score) {
-      score.textContent = `Điểm của bạn: ${scores[socket.id] || 0}`;
-    }
-  });
-
-  document.getElementById('reset').addEventListener('click', () => {
-    if (isAIMode) {
-      resetGameForAI();
-    } else if (socket.connected && roomId) {
-      socket.emit('resetGame', roomId);
-    }
-  });
-
-  socket.on('resetGame', () => {
-    if (!isAIMode) {
-      board = Array(rows).fill().map(() => Array(cols).fill(null));
-      drawBoard(board);
-      timer.textContent = '';
-      status.textContent = `Bạn là ${mySymbol}. Chờ đối thủ...`;
-    }
-  });
-
-  window.addEventListener('beforeunload', () => {
-    if (!isAIMode && socket.connected && roomId) {
-      socket.emit('leaveRoom', roomId);
-    }
-  });
-
-  window.onload = () => {
-    console.log('Window loaded, initializing game...');
-    if (ctx) {
-      drawBoard(board);
-      console.log('Board drawn successfully.');
+    // --- KHỞI ĐỘNG KHI TẢI TRANG ---
+    if (roomId && requestedSize) {
+        const user = JSON.parse(localStorage.getItem('user'));
+        socket.emit('joinRoom', { roomId, size: requestedSize, username: user ? user.username : 'Khách', mode: requestedMode || 'normal' });
+        statusEl.textContent = `Đang vào phòng ${roomId}...`;
     } else {
-      console.error('Context is null after onload!');
+        statusEl.textContent = 'Lỗi: Không có thông tin phòng.';
     }
-    if (isAIMode) {
-      resetGameForAI();
-    } else if (roomId) {
-      joinRoom();
-    }
-  };
 }

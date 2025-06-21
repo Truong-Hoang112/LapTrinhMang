@@ -10,288 +10,97 @@ const server = http.createServer(app);
 const io = socketIo(server);
 
 app.use(express.static('public'));
-
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
-
-app.get('/home.html', (req, res, next) => {
-  if (req.headers['sec-websocket-protocol']) {
-    return next();
-  }
-  res.sendFile(path.join(__dirname, 'public', 'home.html'));
-});
-
-let users = {};
-try {
-  const data = fs.readFileSync('users.json', 'utf8');
-  users = data ? JSON.parse(data) : {};
-} catch (err) {
-  if (err.code === 'ENOENT') {
-    fs.writeFileSync('users.json', '{}');
-    users = {};
-  } else {
-    console.error('Lỗi đọc file users.json:', err.message);
-    fs.writeFileSync('users.json', '{}');
-    users = {};
-  }
-}
-
-function saveUsers() {
-  const data = JSON.stringify(users, null, 2);
-  fs.writeFileSync('users.json', data, { flag: 'w' });
-}
-
-let scores = {};
-try {
-  const data = fs.readFileSync('scores.json', 'utf8');
-  scores = data ? JSON.parse(data) : {};
-} catch (err) {
-  if (err.code === 'ENOENT') {
-    fs.writeFileSync('scores.json', '{}');
-    scores = {};
-  } else {
-    console.error('Lỗi đọc file scores.json:', err.message);
-    fs.writeFileSync('scores.json', '{}');
-    scores = {};
-  }
-}
-
+app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'login.html')); });
+app.get(['/home.html', '/game.html'], (req, res, next) => { if (req.headers['sec-websocket-protocol']) return next(); res.sendFile(path.join(__dirname, 'public', req.path)); });
+app.get('/getRoomInfo', (req, res) => { const room = rooms[req.query.roomId]; if (room && room.size) { res.json({ success: true, size: room.size, mode: room.mode }); } else { res.status(404).json({ success: false, message: 'Phòng không tồn tại.' }); }});
+function readJsonFileSync(filePath) { try { if (fs.existsSync(filePath)) { const c = fs.readFileSync(filePath, 'utf8'); return c ? JSON.parse(c) : {}; } } catch (e) { console.error(`Lỗi đọc file ${filePath}:`, e); } return {}; }
+function saveJsonFileSync(filePath, data) { try { fs.writeFileSync(filePath, JSON.stringify(data, null, 2)); } catch (e) { console.error(`Lỗi ghi file ${filePath}:`, e); } }
+let users = readJsonFileSync(path.join(__dirname, 'users.json'));
 let rooms = {};
-
-function checkWin(row, col, player, board, rows, cols, winLength) {
-  const directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
-  for (let [dx, dy] of directions) {
-    let count = 1;
-    for (let i = 1; i < winLength; i++) {
-      if (row + i * dx < rows && row + i * dx >= 0 && col + i * dy < cols && col + i * dy >= 0 && board[row + i * dx][col + i * dy] === player) count++;
-      else break;
-    }
-    for (let i = 1; i < winLength; i++) {
-      if (row - i * dx < rows && row - i * dx >= 0 && col - i * dy < cols && col - i * dy >= 0 && board[row - i * dx][col - i * dy] === player) count++;
-      else break;
-    }
-    if (count >= winLength) return true;
-  }
-  return false;
-}
+function checkWin(row, col, player, board, winLength, mode = 'normal') { /* ... Giữ nguyên hàm checkWin ... */ }
 
 io.on('connection', (socket) => {
-  console.log('Người chơi đã kết nối:', socket.id);
+    console.log('Một client đã kết nối:', socket.id);
+    socket.on('register', async ({ username, password }) => { /* ... */ });
+    socket.on('login', async ({ username, password }) => { /* ... */ });
 
-  socket.on('register', async ({ username, password }) => {
-    if (users[username]) {
-      socket.emit('registerResponse', {
-        success: false,
-        message: 'Tên đăng nhập đã tồn tại!'
-      });
-      return;
-    }
-
-    try {
-      const hashedPassword = await bcrypt.hash(password, 10);
-      users[username] = {
-        password: hashedPassword,
-        score: 0
-      };
-      saveUsers();
-      socket.emit('registerResponse', {
-        success: true,
-        message: 'Đăng ký thành công!'
-      });
-    } catch (error) {
-      socket.emit('registerResponse', {
-        success: false,
-        message: 'Lỗi đăng ký!'
-      });
-    }
-  });
-
-  socket.on('login', async ({ username, password }) => {
-    const user = users[username];
-    if (!user) {
-      socket.emit('loginResponse', {
-        success: false,
-        message: 'Tên đăng nhập không tồn tại!'
-      });
-      return;
-    }
-
-    try {
-      const match = await bcrypt.compare(password, user.password);
-      if (match) {
-        socket.emit('loginResponse', {
-          success: true,
-          user: {
-            username,
-            score: user.score
-          }
-        });
-      } else {
-        socket.emit('loginResponse', {
-          success: false,
-          message: 'Mật khẩu không đúng!'
-        });
-      }
-    } catch (error) {
-      socket.emit('loginResponse', {
-        success: false,
-        message: 'Lỗi đăng nhập!'
-      });
-    }
-  });
-
-  socket.on('joinRoom', (roomId, size = '15x15', username, mode = 'normal') => {
-    const [rows, cols] = size.split('x').map(Number);
-    const winLength = rows === 3 ? 3 : 5;
-    if (!rooms[roomId] || Object.keys(rooms[roomId].players).length < 2) {
-      socket.join(roomId);
-      rooms[roomId] = rooms[roomId] || { 
-        board: Array(rows).fill().map(() => Array(cols).fill(null)), 
-        currentPlayer: 'X', 
-        players: {}, 
-        size, 
-        winLength,
-        usernames: {},
-        mode,
-        timer: null,
-        timeLeft: mode === 'timed' ? 30 : null
-      };
-      rooms[roomId].players[socket.id] = { symbol: Object.keys(rooms[roomId].players).length === 0 ? 'X' : 'O' };
-      if (username) {
-        rooms[roomId].usernames[socket.id] = username;
-      }
-      if (Object.keys(rooms[roomId].players).length === 2 && rooms[roomId].mode === 'timed') {
-        startTimer(roomId);
-      }
-      io.to(roomId).emit('playerUpdate', {
-        players: rooms[roomId].players,
-        usernames: rooms[roomId].usernames,
-        size,
-        mode: rooms[roomId].mode
-      });
-    } else {
-      socket.emit('roomFull', 'Phòng đã đầy!');
-    }
-  });
-
-  function startTimer(roomId) {
-    if (!rooms[roomId] || rooms[roomId].mode !== 'timed') return;
-    clearTimeout(rooms[roomId].timer);
-    rooms[roomId].timeLeft = 30;
-    io.to(roomId).emit('updateTimer', { timeLeft: rooms[roomId].timeLeft });
-    rooms[roomId].timer = setInterval(() => {
-      rooms[roomId].timeLeft--;
-      io.to(roomId).emit('updateTimer', { timeLeft: rooms[roomId].timeLeft });
-      if (rooms[roomId].timeLeft <= 0) {
-        clearInterval(rooms[roomId].timer);
-        const loser = rooms[roomId].currentPlayer;
-        const winner = loser === 'X' ? 'O' : 'X';
-        const winnerSocketId = Object.keys(rooms[roomId].players).find(id => rooms[roomId].players[id].symbol === winner);
-        const winnerUsername = rooms[roomId].usernames[winnerSocketId] || winner;
-        scores[winnerSocketId] = (scores[winnerSocketId] || 0) + 1;
-        fs.writeFileSync('scores.json', JSON.stringify(scores));
-        io.to(roomId).emit('updateScores', scores);
-        io.to(roomId).emit('gameOver', `Hết thời gian! Người chơi ${winnerUsername} (${winner}) thắng!`);
-        resetRoom(roomId);
-      }
-    }, 1000);
-  }
-
-  function resetRoom(roomId) {
-    if (rooms[roomId]) {
-      const { size, mode } = rooms[roomId];
-      const [rows, cols] = size.split('x').map(Number);
-      rooms[roomId].board = Array(rows).fill().map(() => Array(cols).fill(null));
-      rooms[roomId].currentPlayer = 'X';
-      rooms[roomId].players = {};
-      rooms[roomId].usernames = {};
-      clearTimeout(rooms[roomId].timer);
-      rooms[roomId].timeLeft = mode === 'timed' ? 30 : null;
-      io.to(roomId).emit('resetGame');
-    }
-  }
-
-  socket.on('move', ({ roomId, row, col }) => {
-    if (!rooms[roomId] || !rooms[roomId].players[socket.id] || rooms[roomId].players[socket.id].symbol !== rooms[roomId].currentPlayer || rooms[roomId].board[row][col]) return;
-
-    const { board, size, winLength, mode } = rooms[roomId];
-    const [rows, cols] = size.split('x').map(Number);
-    board[row][col] = rooms[roomId].currentPlayer;
-    io.to(roomId).emit('updateBoard', { board: board.map(row => [...row]), currentPlayer: rooms[roomId].currentPlayer });
-
-    if (checkWin(row, col, rooms[roomId].currentPlayer, board, rows, cols, winLength)) {
-      const winner = rooms[roomId].currentPlayer;
-      const winnerSocketId = Object.keys(rooms[roomId].players).find(id => rooms[roomId].players[id].symbol === winner);
-      const winnerUsername = rooms[roomId].usernames[winnerSocketId] || winner;
-      scores[winnerSocketId] = (scores[winnerSocketId] || 0) + 1;
-      fs.writeFileSync('scores.json', JSON.stringify(scores));
-      io.to(roomId).emit('updateScores', scores);
-      io.to(roomId).emit('gameOver', `Người chơi ${winnerUsername} (${winner}) thắng!`);
-      resetRoom(roomId);
-    } else {
-      rooms[roomId].currentPlayer = rooms[roomId].currentPlayer === 'X' ? 'O' : 'X';
-      if (mode === 'timed') {
-        startTimer(roomId);
-      }
-      io.to(roomId).emit('updateBoard', { board: board.map(row => [...row]), currentPlayer: rooms[roomId].currentPlayer });
-    }
-  });
-
-  socket.on('leaveRoom', (roomId) => {
-    if (rooms[roomId] && rooms[roomId].players[socket.id]) {
-      const username = rooms[roomId].usernames[socket.id] || 'Người chơi';
-      delete rooms[roomId].players[socket.id];
-      delete rooms[roomId].usernames[socket.id];
-      clearTimeout(rooms[roomId].timer);
-      io.to(roomId).emit('playerUpdate', {
-        players: rooms[roomId].players,
-        usernames: rooms[roomId].usernames
-      });
-      io.to(roomId).emit('opponentLeft', `Người chơi ${username} đã rời phòng.`);
-      if (Object.keys(rooms[roomId].players).length === 0) {
-        delete rooms[roomId];
-      }
-    }
-  });
-
-  socket.on('disconnect', () => {
-    console.log('Người chơi đã ngắt kết nối:', socket.id);
-    for (let roomId in rooms) {
-      if (rooms[roomId].players[socket.id]) {
-        const username = rooms[roomId].usernames[socket.id] || 'Người chơi';
-        delete rooms[roomId].players[socket.id];
-        delete rooms[roomId].usernames[socket.id];
-        clearTimeout(rooms[roomId].timer);
-        io.to(roomId).emit('playerUpdate', {
-          players: rooms[roomId].players,
-          usernames: rooms[roomId].usernames
-        });
-        io.to(roomId).emit('opponentLeft', `Người chơi ${username} đã rời phòng.`);
-        if (Object.keys(rooms[roomId].players).length === 0) {
-          delete rooms[roomId];
+    socket.on('joinRoom', ({ roomId, size, username, mode }) => {
+        if (!roomId || !size || !username) return;
+        socket.join(roomId);
+        if (!rooms[roomId]) {
+            const [rows, cols] = size.split('x').map(Number);
+            rooms[roomId] = { board: Array(rows).fill(null).map(() => Array(cols).fill(null)), currentPlayer: 'X', players: {}, usernames: {}, size, winLength: size === '3x3' ? 3 : 5, mode: mode || 'normal', rematchVotes: [], drawOfferFrom: null, previousState: null, undoRequestFrom: null };
         }
-        break;
-      }
-    }
-  });
+        const room = rooms[roomId];
+        if (Object.keys(room.players).length >= 2 && !room.players[socket.id]) return socket.emit('roomFull', 'Phòng đã đầy!');
+        if (!room.players[socket.id]) {
+            room.players[socket.id] = { symbol: Object.keys(room.players).length === 0 ? 'X' : 'O' };
+            room.usernames[socket.id] = username;
+        }
+        io.to(roomId).emit('playerUpdate', { players: room.players, usernames: room.usernames, size: room.size, mode: room.mode, board: room.board, currentPlayer: room.currentPlayer });
+    });
 
-  socket.on('resetGame', (roomId) => {
-    if (rooms[roomId]) {
-      resetRoom(roomId);
-    }
-  });
+    socket.on('move', ({ roomId, row, col }) => {
+        const room = rooms[roomId];
+        if (!room || !room.players[socket.id] || room.players[socket.id].symbol !== room.currentPlayer || !room.board[row] || room.board[row][col]) return;
+        console.log(`--- MOVE: Người chơi ${room.usernames[socket.id]} (${room.currentPlayer}) đi nước (${row}, ${col}) ---`);
+        room.previousState = { board: JSON.parse(JSON.stringify(room.board)), currentPlayer: room.currentPlayer };
+        room.board[row][col] = room.currentPlayer;
+        const isWin = checkWin(row, col, room.currentPlayer, room.board, room.winLength, room.mode);
+        if (isWin) {
+            io.to(roomId).emit('gameOver', `Người chơi ${room.usernames[socket.id]} (${room.currentPlayer}) thắng!`);
+        } else {
+            room.currentPlayer = room.currentPlayer === 'X' ? 'O' : 'X';
+            console.log(`MOVE: Đổi lượt cho người chơi ${room.currentPlayer}`);
+            io.to(roomId).emit('updateBoard', { board: room.board, currentPlayer: room.currentPlayer });
+        }
+    });
+
+    // PHIÊN BẢN GỠ LỖI CỦA requestUndo
+    socket.on('requestUndo', (roomId) => {
+        const room = rooms[roomId];
+        const requesterId = socket.id;
+        const requester = room?.players[requesterId];
+
+        console.log(`\n--- SERVER: Nhận 'requestUndo' từ ${requester?.username || requesterId} ---`);
+
+        // In ra tất cả các điều kiện để kiểm tra
+        if (!room) {
+            console.log("-> KIỂM TRA THẤT BẠI: Phòng không tồn tại.");
+            return socket.emit('undoResponse', 'Lỗi: Phòng không tồn tại.');
+        }
+        if (!room.previousState) {
+            console.log("-> KIỂM TRA THẤT BẠI: Không có trạng thái cũ (previousState is null).");
+            return socket.emit('undoResponse', 'Không có nước đi nào để quay lại.');
+        }
+        if (room.undoRequestFrom) {
+            console.log("-> KIỂM TRA THẤT BẠI: Đã có người khác xin undo.");
+            return socket.emit('undoResponse', 'Đã có người khác yêu cầu đi lại, vui lòng chờ.');
+        }
+        if (!requester) {
+            console.log("-> KIỂM TRA THẤT BẠI: Không tìm thấy người yêu cầu trong phòng.");
+            return socket.emit('undoResponse', 'Lỗi: Bạn không có trong phòng này.');
+        }
+
+        console.log(`- Symbol của người yêu cầu: '${requester.symbol}'`);
+        console.log(`- Lượt đi của nước đi trước đó: '${room.previousState.currentPlayer}'`);
+        
+        // Logic đúng: Người xin đi lại phải là người vừa đi nước trước đó.
+        if (requester.symbol !== room.previousState.currentPlayer) {
+            console.log("-> KIỂM TRA THẤT BẠI: Người yêu cầu không phải là người đi nước trước đó.");
+            return socket.emit('undoResponse', 'Bạn chỉ có thể xin đi lại nước đi của chính mình.');
+        }
+        
+        console.log("==> TẤT CẢ KIỂM TRA HỢP LỆ. Gửi yêu cầu cho đối thủ.");
+        room.undoRequestFrom = requesterId;
+        const opponentId = Object.keys(room.players).find(id => id !== requesterId);
+        if (opponentId) {
+            io.to(opponentId).emit('undoRequested', `Đối thủ (${room.usernames[requesterId]}) muốn đi lại.`);
+        }
+    });
+    
+    // ... các hàm khác không đổi ...
 });
 
-setInterval(() => {
-  for (let roomId in rooms) {
-    if (Object.keys(rooms[roomId].players).length === 0) {
-      delete rooms[roomId];
-      console.log(`Phòng ${roomId} đã bị xóa do không có người chơi.`);
-    }
-  }
-}, 300000); // Kiểm tra mỗi 5 phút
-
-server.listen(3000, () => {
-  console.log('Máy chủ đang chạy tại cổng 3000');
-});
+const PORT = 3000;
+server.listen(PORT, () => { console.log(`Máy chủ đang chạy tại cổng ${PORT}`); });

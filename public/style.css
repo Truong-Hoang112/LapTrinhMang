@@ -71,13 +71,16 @@ body {
 
 /* Game Container Styles */
 .game-container {
-  margin-top: 80px;
-  padding: 20px;
+  padding-top: 80px; /* Thay margin-top bằng padding-top */
+  padding-left: 20px; /* Giữ nguyên padding các bên */
+  padding-right: 20px;
+  padding-bottom: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
-  min-height: calc(90vh - 20px);
+  gap: 30px; /* Cập nhật lại gap theo style mới */
+  min-height: calc(100vh - 80px); /* Điều chỉnh min-height để lấp đầy màn hình */
+  width: 100%; /* Thêm width 100% để container chiếm hết chiều ngang */
 }
 
 .content-wrapper {
@@ -500,4 +503,299 @@ form button:hover {
     width: 300px !important;
     height: 300px !important;
   }
+}
+/* =================================================== */
+/* ===== PHONG CÁCH NÂNG CẤP CHO TRANG CHỦ (HOME) ===== */
+/* =================================================== */
+
+/* Container chính của trang chủ, sắp xếp các box theo chiều dọc */
+.home-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px; /* Khoảng cách giữa các box */
+    padding: 20px;
+    width: 100%;
+}
+
+/* Kiểu dáng cho từng box chức năng (Tạo phòng, Tham gia phòng...) */
+.mode-selection-box {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 25px 30px;
+    width: 100%;
+    max-width: 600px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(5px);
+}
+
+.mode-selection-box h2 {
+    margin-top: 0;
+    margin-bottom: 25px;
+    text-align: center;
+    color: #FFF;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+/* Bố cục lưới 2x2 cho các nút tạo phòng */
+.mode-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Tự động co giãn */
+    gap: 15px;
+}
+
+/* GHI ĐÈ STYLE CŨ: Style mới cho các nút chế độ */
+.mode-btn {
+    background: linear-gradient(45deg, #3498db, #8e44ad); /* Gradient xanh-tím */
+    color: white;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 15px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    /* Reset lại max-width để grid hoạt động tốt */
+    max-width: none; 
+}
+
+/* GHI ĐÈ STYLE CŨ: Hiệu ứng hover mới */
+.mode-btn:hover {
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+    filter: brightness(1.15);
+}
+
+/* Hiệu ứng khi nhấn nút */
+.mode-btn:active {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Khu vực tham gia phòng */
+.join-room-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* GHI ĐÈ STYLE CŨ: Ô nhập mã phòng mới */
+.join-room-controls input[type="text"] {
+    flex-grow: 1; 
+    padding: 15px;
+    border-radius: 10px;
+    border: 2px solid transparent; /* Viền trong suốt */
+    font-size: 16px;
+    background-color: rgba(255, 255, 255, 0.8);
+    color: #333;
+    transition: all 0.3s ease;
+}
+
+.join-room-controls input[type="text"]:focus {
+    border-color: #8e44ad; /* Đổi màu viền khi focus */
+    background-color: #FFF;
+    outline: none;
+}
+
+/* GHI ĐÈ STYLE CŨ: Nút "Vào phòng" đặc biệt hơn */
+.join-btn {
+    background: linear-gradient(45deg, #e67e22, #e74c3c); /* Gradient cam-đỏ */
+    flex-shrink: 0; 
+}
+/* ===== STYLE CHO PHÒNG CHỜ (LOBBY) ===== */
+.lobby-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-top: 80px;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+.lobby-box {
+    width: 100%;
+    max-width: 700px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 30px 40px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+.lobby-header h2 {
+    font-size: 28px;
+    color: #333;
+    margin-top: 0;
+}
+
+.lobby-header p {
+    font-size: 16px;
+    color: #666;
+    background-color: #f0f0f0;
+    padding: 5px 10px;
+    border-radius: 5px;
+    display: inline-block;
+}
+
+.players-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin: 30px 0;
+}
+
+.player-card {
+    width: 200px;
+    padding: 20px;
+    border: 2px solid #e0e0e0;
+    border-radius: 15px;
+}
+
+.player-name {
+    font-size: 20px;
+    font-weight: bold;
+    margin: 0 0 10px 0;
+}
+
+.player-status {
+    font-size: 16px;
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 20px;
+    color: white;
+}
+
+.player-status.ready { background-color: #4CAF50; }
+.player-status.not-ready { background-color: #f44336; }
+
+.vs-separator {
+    font-size: 36px;
+    font-weight: bold;
+    color: #4CAF50;
+}
+
+#lobbyStatus {
+    font-size: 18px;
+    color: #333;
+    min-height: 25px;
+}
+
+.lobby-btn {
+    width: 50%;
+    padding: 15px;
+    font-size: 20px;
+    margin-top: 20px;
+}
+/* =================================================== */
+/* ===== PHONG CÁCH MỚI CHO TRANG CHƠI GAME ===== */
+/* =================================================== */
+
+/* Container chính cho trang game, sử dụng flexbox */
+.game-page-container {
+    display: flex;
+    flex-wrap: wrap; /* Cho phép xuống hàng trên màn hình nhỏ */
+    justify-content: center;
+    align-items: flex-start; /* Căn các mục từ trên xuống */
+    gap: 30px;
+    padding: 100px 20px 20px 20px; /* Thêm padding-top để không bị header che */
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Vùng chứa bàn cờ */
+.board-container {
+    flex-shrink: 0; /* Không cho phép co lại */
+}
+
+/* Ghi đè style cũ của canvas để đẹp hơn */
+canvas {
+    border: 3px solid #3a3a3a;
+    border-radius: 12px;
+    background-color: #f7f7f7;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Bảng thông tin bên phải */
+.info-panel {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    padding: 20px 30px;
+    width: 100%;
+    max-width: 300px; /* Giới hạn chiều rộng của bảng */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.info-panel h2 {
+    text-align: center;
+    color: #333;
+    font-size: 24px;
+    margin-top: 0;
+    margin-bottom: 25px;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 15px;
+}
+
+.info-item {
+    margin-bottom: 20px;
+}
+
+.info-label {
+    font-size: 14px;
+    color: #666;
+    display: block;
+    margin-bottom: 5px;
+}
+
+#status {
+    font-size: 18px;
+    font-weight: bold;
+    color: #2c3e50;
+    min-height: 50px; /* Đảm bảo chiều cao không đổi khi text thay đổi */
+}
+
+.timer-display {
+    font-size: 18px;
+    font-weight: bold;
+    color: #e74c3c;
+    min-height: 25px;
+}
+
+/* Ghi đè style nút Chơi Lại cho nhất quán */
+#rematchBtn {
+    width: 100%;
+    font-size: 18px;
+    padding: 12px;
+    background: linear-gradient(45deg, #e67e22, #e74c3c); /* Màu cam-đỏ */
+}
+
+/* Responsive cho trang game */
+@media (max-width: 950px) {
+    .game-page-container {
+        flex-direction: column; /* Xếp thành 1 cột */
+        align-items: center; /* Căn giữa */
+    }
+
+    .info-panel {
+        max-width: 600px; /* Cho phép bảng thông tin rộng bằng bàn cờ */
+    }
+}
+/* Style cho các nút chức năng mới trong game */
+.info-btn {
+    background: linear-gradient(45deg, #3498db, #2980b9); /* Xanh dương */
+}
+.warning-btn {
+    background: linear-gradient(45deg, #f1c40f, #f39c12); /* Vàng */
+}
+.danger-btn {
+    background: linear-gradient(45deg, #e74c3c, #c0392b); /* Đỏ */
 }

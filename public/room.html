@@ -7,78 +7,92 @@
 </head>
 <body>
     <header class="game-header">
-        <div class="game-title">
-            <h1>Game Cờ Caro</h1>
-        </div>
-        <div class="user-info">
-            <span id="username"></span>
-            <button onclick="logout()" class="logout-btn">Đăng xuất</button>
-        </div>
-    </header>
-
-    <main class="game-container">
-        <div class="content-wrapper">
-            <h2 class="room-title">Phòng Chờ</h2>
-            <div class="room-controls">
-                <button class="room-btn" onclick="createRoom()">Tạo Phòng Mới</button>
-                <div class="join-room">
-                    <input id="roomIdInput" type="text" placeholder="Nhập mã phòng để tham gia">
-                    <button class="room-btn join-btn" onclick="joinRoom()">Tham Gia Phòng</button>
-                </div>
-                <div id="roomIdDisplay" class="room-id-display">
-                    <p>Mã phòng của bạn: <span id="roomId" class="room-code"></span></p>
-                    <button class="room-btn copy-btn" onclick="copyRoomId()">Sao Chép Mã Phòng</button>
-                </div>
-                <button class="room-btn back-btn" onclick="goBack()">Quay Lại Trang Chủ</button>
+        </header>
+    <main class="lobby-container">
+        <div class="lobby-box">
+            <div class="lobby-header">
+                <h2 id="lobbyTitle">Phòng chờ</h2>
+                <p>Mã phòng: <strong id="lobbyRoomId">...</strong></p>
             </div>
+            <div class="players-container">
+                <div class="player-card" id="player1">
+                    <p class="player-name">Đang chờ...</p>
+                    <p class="player-status not-ready">Chưa sẵn sàng</p>
+                </div>
+                <div class="vs-separator">VS</div>
+                <div class="player-card" id="player2">
+                    <p class="player-name">Đang chờ...</p>
+                    <p class="player-status not-ready">Chưa sẵn sàng</p>
+                </div>
+            </div>
+            <p id="lobbyStatus">Đang chờ người chơi thứ hai...</p>
+            <button id="readyBtn" class="lobby-btn">Sẵn Sàng</button>
         </div>
     </main>
-
+    <script src="/socket.io/socket.io.js"></script>
     <script>
+        const socket = io();
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomId = urlParams.get('roomId');
+        const size = urlParams.get('size');
+        const mode = urlParams.get('mode');
         const user = JSON.parse(localStorage.getItem('user'));
-        if (!user) {
-            window.location.href = '/';
-        } else {
-            document.getElementById('username').textContent = `Xin chào, ${user.username}`;
-        }
 
-        function logout() {
-            localStorage.removeItem('user');
-            window.location.href = '/';
-        }
-
-        function createRoom() {
-            const roomId = Math.random().toString(36).substring(2, 10);
-            const urlParams = new URLSearchParams(window.location.search);
-            const size = urlParams.get('size') || '15x15';
-            const mode = urlParams.get('mode') || 'normal';
-            document.getElementById('roomId').textContent = roomId;
-            document.getElementById('roomIdDisplay').style.display = 'flex';
-            window.location.href = `/index.html?roomId=${roomId}&size=${size}&mode=${mode}`;
-        }
-
-        function joinRoom() {
-            const roomId = document.getElementById('roomIdInput').value.trim();
-            if (roomId) {
-                const urlParams = new URLSearchParams(window.location.search);
-                const size = urlParams.get('size') || '15x15';
-                const mode = urlParams.get('mode') || 'normal';
-                window.location.href = `/index.html?roomId=${roomId}&size=${size}&mode=${mode}`;
-            } else {
-                alert('Vui lòng nhập mã phòng!');
-            }
-        }
-
-        function copyRoomId() {
-            const roomId = document.getElementById('roomId').textContent;
-            navigator.clipboard.writeText(roomId).then(() => {
-                alert('Đã sao chép mã phòng!');
-            });
-        }
-
-        function goBack() {
+        if (!user || !roomId) {
             window.location.href = '/home.html';
         }
+
+        // --- Lấy các element ---
+        document.getElementById('lobbyRoomId').textContent = roomId;
+        const p1_name = document.querySelector('#player1 .player-name');
+        const p1_status = document.querySelector('#player1 .player-status');
+        const p2_name = document.querySelector('#player2 .player-name');
+        const p2_status = document.querySelector('#player2 .player-status');
+        const lobbyStatus = document.getElementById('lobbyStatus');
+        const readyBtn = document.getElementById('readyBtn');
+        
+        // --- Gửi yêu cầu vào phòng chờ ---
+        socket.emit('joinLobby', { roomId, size, mode, username: user.username });
+
+        // --- Lắng nghe sự kiện từ Server ---
+        socket.on('lobbyUpdate', (room) => {
+            const players = Object.values(room.players);
+            
+            // Cập nhật người chơi 1
+            if(players[0]) {
+                p1_name.textContent = players[0].username;
+                p1_status.textContent = players[0].isReady ? 'Đã sẵn sàng' : 'Chưa sẵn sàng';
+                p1_status.className = players[0].isReady ? 'player-status ready' : 'player-status not-ready';
+            }
+            
+            // Cập nhật người chơi 2
+            if(players[1]) {
+                p2_name.textContent = players[1].username;
+                p2_status.textContent = players[1].isReady ? 'Đã sẵn sàng' : 'Chưa sẵn sàng';
+                p2_status.className = players[1].isReady ? 'player-status ready' : 'player-status not-ready';
+                lobbyStatus.textContent = 'Tất cả người chơi đã vào. Nhấn "Sẵn Sàng" để bắt đầu!';
+            } else {
+                p2_name.textContent = 'Đang chờ...';
+                p2_status.textContent = 'Chưa kết nối';
+                p2_status.className = 'player-status not-ready';
+                lobbyStatus.textContent = 'Đã sao chép mã phòng. Hãy gửi cho bạn bè!';
+                navigator.clipboard.writeText(roomId);
+            }
+        });
+
+        socket.on('startGame', (gameInfo) => {
+            lobbyStatus.textContent = 'Bắt đầu sau 3 giây...';
+            setTimeout(() => {
+                window.location.href = `/game.html?roomId=${gameInfo.roomId}&size=${gameInfo.size}&mode=${gameInfo.mode}`;
+            }, 3000);
+        });
+
+        // --- Xử lý nút Sẵn sàng ---
+        readyBtn.addEventListener('click', () => {
+            socket.emit('playerReady', roomId);
+            readyBtn.disabled = true;
+            readyBtn.textContent = 'Đang chờ đối thủ...';
+        });
     </script>
 </body>
 </html>
