@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>Đăng nhập - Game Cờ Caro</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
 <body>
     <div class="auth-container">
@@ -16,7 +15,7 @@
 
             <div id="login" class="tab-content active">
                 <h2>Đăng nhập</h2>
-                <form id="loginForm" onsubmit="return handleLogin(event)">
+                <form id="loginForm" onsubmit="handleLogin(event)">
                     <div class="form-group">
                         <label for="loginUsername">Tên đăng nhập:</label>
                         <input type="text" id="loginUsername" required>
@@ -31,7 +30,7 @@
 
             <div id="register" class="tab-content">
                 <h2>Đăng ký</h2>
-                <form id="registerForm" onsubmit="return handleRegister(event)">
+                <form id="registerForm" onsubmit="handleRegister(event)">
                     <div class="form-group">
                         <label for="registerUsername">Tên đăng nhập:</label>
                         <input type="text" id="registerUsername" required>
@@ -49,6 +48,7 @@
             </div>
         </div>
     </div>
+    <script src="/socket.io/socket.io.js"></script>
     <script src="auth.js"></script>
 </body>
 </html>
