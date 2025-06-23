@@ -293,5 +293,5 @@ setInterval(() => {
 }, 300000); // Kiểm tra mỗi 5 phút
 
 server.listen(3000, () => {
-  console.log('Máy chủ đang chạy tại cổng 3000');
+  console.log('Máy chủ đang chạy tại http://localhost:3000');
 });
