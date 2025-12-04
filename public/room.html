@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Phòng Chờ - Game Cờ Caro</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="game-header">
+        <div class="game-title"><h1>Game Cờ Caro</h1></div>
+        <div class="user-info">
+            <span id="usernameDisplay"></span>
+            <a href="/home.html" class="logout-btn">Thoát Phòng</a>
+        </div>
+    </header>
+
+    <main class="lobby-container">
+        <div class="lobby-box">
+            <div class="lobby-header">
+                <h2>Phòng Chờ</h2>
+                <p>Mã phòng: <strong id="lobbyRoomId">...</strong> <button id="copyBtn" class="copy-btn-small">Sao chép</button></p>
+            </div>
+
+            <div class="players-container">
+                <div class="player-card" id="player1_card">
+                    <p class="player-name">Đang chờ...</p>
+                    <p class="player-status not-ready">Chưa kết nối</p>
+                </div>
+
+                <div class="vs-separator">VS</div>
+
+                <div class="player-card" id="player2_card">
+                    <p class="player-name">Đang chờ...</p>
+                    <p class="player-status not-ready">Chưa kết nối</p>
+                </div>
+            </div>
+
+            <p id="lobbyStatus" style="min-height: 24px; font-style: italic; color: #333;"></p>
+            <button id="actionBtn" class="mode-btn lobby-btn" disabled>Chờ người chơi...</button>
+        </div>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomId = urlParams.get('roomId');
+        const size = urlParams.get('size');
+        const mode = urlParams.get('mode');
+        const user = JSON.parse(localStorage.getItem('user'));
+
+        if (!user || !roomId) {
+            window.location.href = '/home.html';
+        }
+
+        document.getElementById('usernameDisplay').textContent = `Xin chào, ${user.username}`;
+        document.getElementById('lobbyRoomId').textContent = roomId;
+        
+        const p1_card = document.getElementById('player1_card');
+        const p2_card = document.getElementById('player2_card');
+        const actionBtn = document.getElementById('actionBtn');
+        const lobbyStatus = document.getElementById('lobbyStatus');
+
+        // Gửi yêu cầu vào phòng chờ ngay khi tải trang
+        socket.emit('joinLobby', { roomId, size, mode, username: user.username });
+
+        // Lắng nghe sự kiện cập nhật từ Server
+        socket.on('lobbyUpdate', (room) => {
+            const playerIds = Object.keys(room.players);
+            const me = room.players[socket.id];
+            const isHost = socket.id === room.hostId;
+            
+            // Luôn reset thẻ về trạng thái mặc định trước khi cập nhật
+            p1_card.querySelector('.player-name').textContent = 'Trống';
+            p1_card.querySelector('.player-status').className = 'player-status not-ready';
+            p1_card.querySelector('.player-status').textContent = 'Chưa kết nối';
+            p2_card.querySelector('.player-name').textContent = 'Trống';
+            p2_card.querySelector('.player-status').className = 'player-status not-ready';
+            p2_card.querySelector('.player-status').textContent = 'Chưa kết nối';
+            
+            // Điền thông tin người chơi vào đúng thẻ
+            playerIds.forEach((id) => {
+                const player = room.players[id];
+                const playerCard = (id === room.hostId) ? p1_card : p2_card;
+                const nameEl = playerCard.querySelector('.player-name');
+                const statusEl = playerCard.querySelector('.player-status');
+                
+                nameEl.textContent = player.username;
+                statusEl.textContent = player.isReady ? 'Đã sẵn sàng' : 'Chưa sẵn sàng';
+                statusEl.className = 'player-status ' + (player.isReady ? 'ready' : 'not-ready');
+            });
+
+            // Cập nhật trạng thái phòng
+            if (playerIds.length < 2) {
+                lobbyStatus.textContent = 'Đã sao chép mã phòng. Hãy gửi cho bạn bè!';
+                navigator.clipboard.writeText(roomId).catch(err => console.error('Lỗi sao chép:', err));
+            } else {
+                 lobbyStatus.textContent = 'Tất cả người chơi đã vào. Hãy sẵn sàng!';
+            }
+
+            // Cập nhật nút bấm chính
+            if (isHost) {
+                actionBtn.textContent = 'Bắt Đầu';
+                const opponentId = playerIds.find(id => id !== socket.id);
+                const opponent = opponentId ? room.players[opponentId] : null;
+                actionBtn.disabled = !(opponent && opponent.isReady);
+            } else {
+                actionBtn.textContent = me?.isReady ? 'Đang chờ chủ phòng' : 'Sẵn Sàng';
+                actionBtn.disabled = me?.isReady;
+            }
+        });
+
+        socket.on('gameStarted', (room) => {
+            lobbyStatus.textContent = `Tất cả đã sẵn sàng! Bắt đầu trong 3 giây...`;
+            actionBtn.disabled = true;
+            actionBtn.textContent = 'Đang vào trận...';
+            setTimeout(() => {
+                window.location.href = `/game.html?roomId=${room.roomId}`;
+            }, 3000);
+        });
+
+        socket.on('lobbyMessage', (message) => { alert(message); });
+
+        // Xử lý sự kiện click nút
+        actionBtn.addEventListener('click', () => {
+            const currentText = actionBtn.textContent;
+            if (currentText === 'Bắt Đầu') {
+                socket.emit('requestStartGame', roomId);
+            } else if (currentText === 'Sẵn Sàng') {
+                socket.emit('playerReady', roomId);
+            }
+        });
+
+        document.getElementById('copyBtn').addEventListener('click', () => {
+            navigator.clipboard.writeText(roomId).then(() => {
+                alert('Đã sao chép mã phòng!');
+            });
+        });
+    </script>
+</body>
+</html>

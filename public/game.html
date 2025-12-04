@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Game Caro Online</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+</head>
+<body>
+  <header class="game-header">
+    <div class="game-title"><h1>Game Cờ Caro</h1></div>
+    <div class="user-info">
+      <span id="usernameDisplay"></span>
+      <a href="/home.html" class="logout-btn">Về Trang Chủ</a>
+    </div>
+  </header>
+
+  <main class="game-page-container">
+    <div class="board-container">
+      <canvas id="board" width="600" height="600"></canvas>
+    </div>
+
+    <div class="right-panel">
+      <!-- Khung thông tin trận đấu -->
+      <div class="info-box">
+        <h2>Thông Tin Trận Đấu</h2>
+        <div class="info-item">
+          <span class="info-label">Trạng Thái:</span>
+          <p id="status">Đang tải...</p>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Thời gian:</span>
+          <p id="timer" class="timer-display"></p>
+        </div>
+        <div class="game-controls">
+          <button id="surrenderBtn" class="mode-btn danger-btn">Đầu Hàng</button>
+          <button id="rematchBtn" class="mode-btn" style="display: none;">Chơi Lại</button>
+        </div>
+      </div>
+
+      <!-- Khung trò chuyện -->
+      <div class="chat-box-wrapper">
+        <div class="chat-header"><h3>Trò Chuyện</h3></div>
+        <div id="chat-box" class="chat-box"></div>
+        <div class="chat-input-container">
+          <input type="text" id="chat-input" class="chat-input" placeholder="Nhập tin nhắn...">
+          <button onclick="sendMessage()" class="chat-send-btn">Gửi</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/game.js"></script>
+  <script>
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user && user.username) {
+      document.getElementById('usernameDisplay').textContent = `Xin chào, ${user.username}`;
+    }
+  </script>
+</body>
+</html>

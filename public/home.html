@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Game Cờ Caro - Trang Chủ</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="game-header">
+      <div class="game-title"><h1>Game Cờ Caro</h1></div>
+      <div class="user-info">
+        <span id="usernameDisplay"></span>
+        <button onclick="logout()" class="logout-btn">Đăng xuất</button>
+      </div>
+    </header>
+
+    <main class="home-container">
+      <div class="mode-selection-box">
+        <h2>Chơi Đơn</h2>
+        <div class="mode-grid" style="grid-template-columns: 1fr">
+          <button class="mode-btn" onclick="createGame('15x15', 'ai')">
+            Chơi với Máy (15x15)
+          </button>
+        </div>
+      </div>
+
+      <div class="mode-selection-box">
+        <h2>Tạo Phòng Chơi Mới</h2>
+        <div class="mode-grid">
+          <button class="mode-btn" onclick="createGame('3x3', 'normal')">
+            Chơi với Người (3x3)
+          </button>
+          <button class="mode-btn" onclick="createGame('15x15', 'normal')">
+            Chơi với Người (15x15)
+          </button>
+          <button class="mode-btn" onclick="createGame('15x15', 'ganh')">
+            Chơi Chặn 2 Đầu (15x15)
+          </button>
+          <button class="mode-btn" onclick="createGame('15x15', 'timed')">
+            Giới hạn thời gian (15x15)
+          </button>
+        </div>
+      </div>
+
+      <div class="mode-selection-box">
+        <h2>Tham Gia Phòng</h2>
+        <div class="join-room-controls">
+          <input id="roomIdInput" type="text" placeholder="Nhập mã phòng..." />
+          <button class="mode-btn join-btn" onclick="joinRoom()">
+            Vào phòng
+          </button>
+        </div>
+      </div>
+
+      <div
+        id="newRoomInfo"
+        class="mode-selection-box"
+        style="display: none; border: 2px solid #e67e22"
+      >
+        <h2>Tạo phòng thành công!</h2>
+        <p style="color: white; font-size: 16px">
+          Gửi mã này cho bạn bè của bạn:
+        </p>
+        <div class="join-room-controls">
+          <input
+            id="newRoomId"
+            type="text"
+            style="font-weight: bold; text-align: center"
+            readonly
+          />
+          <button class="mode-btn warning-btn" onclick="copyNewRoomId()">
+            Sao chép
+          </button>
+        </div>
+        <button
+          class="mode-btn join-btn"
+          style="width: 100%; margin-top: 15px"
+          onclick="enterNewGame()"
+        >
+          Vào Chơi Ngay
+        </button>
+      </div>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+      let newGameUrl = "";
+
+      // --- KIỂM TRA ĐĂNG NHẬP ---
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!user) {
+        window.location.href = "/login.html";
+      } else {
+        document.getElementById(
+          "usernameDisplay"
+        ).textContent = `Xin chào, ${user.username}`;
+      }
+
+      function logout() {
+        localStorage.removeItem("user");
+        window.location.href = "/login.html";
+      }
+
+      // --- LOGIC TẠO VÀ THAM GIA PHÒNG ---
+      function createGame(size, mode) {
+        const roomId = `${mode}-${Math.random().toString(36).substring(2, 8)}`;
+
+        // FIX: Đã thêm roomId cho tất cả các chế độ
+        newGameUrl = `/game.html?roomId=${roomId}&size=${size}&mode=${mode}`;
+
+        // Đối với chế độ AI, vào thẳng game ngay lập tức
+        if (mode === "ai") {
+          window.location.href = newGameUrl;
+          return;
+        }
+
+        // Đối với các chế độ multiplayer, hiển thị mã phòng để mời bạn bè
+        const newRoomInfoDiv = document.getElementById("newRoomInfo");
+        const newRoomIdInput = document.getElementById("newRoomId");
+        newRoomIdInput.value = roomId;
+        newRoomInfoDiv.style.display = "block";
+        newRoomInfoDiv.scrollIntoView({ behavior: "smooth" });
+      }
+
+      function enterNewGame() {
+        if (newGameUrl) {
+          window.location.href = newGameUrl;
+        }
+      }
+
+      function copyNewRoomId() {
+        const newRoomIdInput = document.getElementById("newRoomId");
+        newRoomIdInput.select();
+        newRoomIdInput.setSelectionRange(0, 99999); // For mobile devices
+        try {
+          document.execCommand("copy");
+          alert("Đã sao chép mã phòng: " + newRoomIdInput.value);
+        } catch (err) {
+          alert("Lỗi! Không thể sao chép.");
+        }
+      }
+
+      function joinRoom() {
+        const roomId = document.getElementById("roomIdInput").value.trim();
+        if (!roomId) {
+          return alert("Vui lòng nhập mã phòng!");
+        }
+
+        // ✅ Đúng định dạng dữ liệu server trả về
+        fetch(`/getRoomInfo?roomId=${roomId}`)
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.exists) {
+              window.location.href = `/game.html?roomId=${roomId}&size=${data.size}&mode=${data.mode}`;
+            } else {
+              alert("Phòng không tồn tại hoặc đã đầy.");
+            }
+          })
+          .catch((error) => {
+            console.error("Lỗi khi tham gia phòng:", error);
+            alert("Không thể kết nối tới server hoặc phòng không tồn tại.");
+          });
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "thien": {
+    "password": "$2b$10$S7dmPfcJaEwGP135dcLk7efKG9HkzLsQTbtV.hyGrzozK4M5CC/Xm",
+    "score": 0
+  },
+  "thien1": {
+    "password": "$2b$10$xiXo60BLIJ8PV9bOSVxMy.x4YLzAHCF3iz8unr0hLGL6RMiz8SrVm",
+    "score": 0
+  },
+  "admin": {
+    "password": "$2b$10$bOclS/.E8QJJAGhuxk2DFen8W1dugsGt/vjpVqFZCyEDLABYA6avm"
+  },
+  "admin1": {
+    "password": "$2b$10$FUmgwxcHWXZLJafzKoMOiODG82gzDcBu0OBXwAihfNAcoqh1MQtKe"
+  }
+}
